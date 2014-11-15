@@ -1,0 +1,23 @@
+[package]
+name = "search"
+version = "0.0.1"
+authors = ["Radek Szymczyszyn <lavrin@gmail.com>"]
+
+[dependencies.png]
+git = "https://github.com/servo/rust-png"
+
+[lib]
+name = "search"
+path = "src/search/lib.rs"
+
+[[bin]]
+name = "bfs"
+path = "src/bin/bfs.rs"
+
+[profile.release]
+opt-level = 3
+debug = false
+
+[profile.dev]
+opt-level = 0
+debug = true
