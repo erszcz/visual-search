@@ -57,9 +57,14 @@ fn main() {
     };
     let start = vec!((1,1));
     let goals = vec!((5,5));
-    let path = search::bfs(start, goals.clone(),
-                           search::Map { width: 0, height: 0, fields: vec!() });
-    draw_path(path, &mut img);
-    draw_goals(goals, &mut img);
-    write_image(&mut img);
+    match search::bfs(start, goals.clone(),
+                      &search::Map { width: 10, height: 10, fields: vec!() },
+                      search::WorldShape::Rectangle) {
+        Err (e) => println!("error: {}", e),
+        Ok (path) => {
+            draw_path(path, &mut img);
+            draw_goals(goals, &mut img);
+            write_image(&mut img);
+        }
+    }
 }
