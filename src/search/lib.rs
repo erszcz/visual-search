@@ -3,24 +3,28 @@ extern crate png;
 use std::hash::Hash;
 use std::collections::{HashMap, HashSet};
 
-#[deriving(Clone)]
-pub enum Field {
-    Normal,
-    Impassable
+pub mod image;
+pub mod map;
+
+struct SearchMap {
+    width: uint,
+    height: uint,
+    fields: Vec<map::Field>
 }
 
-pub struct Map {
-    pub width: uint,
-    pub height: uint,
-    pub fields: Vec<Field>
-}
-
-impl Map {
+impl SearchMap {
     fn is_allowed(&self, pos: Position) -> bool {
         match self.fields[index(pos, self.width)] {
-            Normal => true,
-            Impassable => false
+            map::Normal => true,
+            map::Impassable => false
         }
+    }
+
+    fn from_map(map: &map::Map) -> SearchMap {
+        SearchMap { width: map.width,
+                    height: map.height,
+                    // TODO: introduce SearchField, convert fields to SearchFields
+                    fields: map.fields.clone() }
     }
 }
 
@@ -73,7 +77,7 @@ impl Iterator<Direction> for DirectionIter {
 }
 
 fn get_move_function(shape: WorldShape)
-        -> fn(Position, Direction, &Map) -> Option<Position> {
+        -> fn(Position, Direction, &SearchMap) -> Option<Position> {
     match shape {
         Rectangle => move_in_rectangle,
         //Torus => |(x,y)| {
@@ -82,7 +86,8 @@ fn get_move_function(shape: WorldShape)
     }
 }
 
-fn move_in_rectangle((x,y): Position, d: Direction, m: &Map) -> Option<Position> {
+fn move_in_rectangle((x,y): Position, d: Direction, m: &SearchMap)
+        -> Option<Position> {
     match d {
         N  => if y > 0 { Some ((x, y-1)) } else { None },
         NE => if y > 0 && x < m.width-1 { Some ((x+1, y-1)) } else { None },
@@ -151,7 +156,8 @@ fn distance((x1,y1): Position, (x2,y2): Position) -> uint {
 }
 
 pub fn bfs(start: Vec<Position>, vgoals: Vec<Position>,
-           map: &Map, world_shape: WorldShape) -> Result {
+           initial_map: &map::Map, world_shape: WorldShape) -> Result {
+    let map = &SearchMap::from_map(initial_map);
     assert_eq!(1, start.len());
     assert_eq!(1, vgoals.len());
     let mv = get_move_function(world_shape);
