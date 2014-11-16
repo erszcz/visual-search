@@ -1,7 +1,9 @@
 extern crate png;
 
+use std::hash::Hash;
 use std::collections::{HashMap, HashSet};
 
+#[deriving(Clone)]
 pub enum Field {
     Normal,
     Impassable
@@ -12,6 +14,18 @@ pub struct Map {
     pub height: uint,
     pub fields: Vec<Field>
 }
+
+impl Map {
+    fn is_allowed(&self, pos: Position) -> bool {
+        match self.fields[index(pos, self.width)] {
+            Normal => true,
+            Impassable => false
+        }
+    }
+}
+
+#[inline]
+fn index((x,y): (uint,uint), width: uint) -> uint { y * width + x }
 
 pub type Position = (uint, uint);
 
@@ -131,23 +145,21 @@ pub enum Error {
 
 pub type Result = std::result::Result<Path, Error>;
 
+fn distance((x1,y1): Position, (x2,y2): Position) -> uint {
+    let (fx1, fy1, fx2, fy2) = (x1 as f64, y1 as f64, x2 as f64, y2 as f64);
+    ( (fx2-fx1) * (fx2-fx1) + (fy2-fy1) * (fy2-fy1) ).sqrt() as uint
+}
+
 pub fn bfs(start: Vec<Position>, vgoals: Vec<Position>,
            map: &Map, world_shape: WorldShape) -> Result {
     assert_eq!(1, start.len());
     assert_eq!(1, vgoals.len());
     let mv = get_move_function(world_shape);
     let mut q = start.clone();
-    let goals = {
-        let mut goals = HashSet::new();
-        for goal in vgoals.iter()
-            { goals.insert(*goal); }
-        goals
-    };
-    let mut visited = HashSet::new();
-    for pos in start.iter()
-        { visited.insert(pos.clone()); }
+    let goals = vec_to_set(vgoals.clone());
+    let mut visited = vec_to_set(start);
     let mut steps = HashMap::new();
-    loop { match q.pop() {
+    loop { match q.remove(0) {
         None => break,
         Some (pos) => {
             println!("visited: {}", visited);
@@ -158,20 +170,33 @@ pub fn bfs(start: Vec<Position>, vgoals: Vec<Position>,
                 let path = reconstruct_path(pos, &steps);
                 return Ok (Path { fields: path })
             }
-            for dir in Direction::iter() {
-                match mv(pos, dir, map) {
-                    None => (),
-                    Some (new_pos) if !visited.contains(&new_pos) => {
-                        q.push(new_pos);
-                        visited.insert(new_pos);
-                        steps.insert(new_pos, pos);
-                    },
-                    _ => ()
+            let rated_moves: Vec<(uint, Position)> = Direction::iter()
+                .map(|d| mv(pos, d, map))
+                .map(|maybe_new_pos| match maybe_new_pos {
+                    None => None,
+                    Some (new_pos) =>
+                        if !map.is_allowed(new_pos) { None }
+                        else { Some ((distance(new_pos, vgoals[0]), new_pos)) }
+                })
+                .filter(|new_pos| new_pos.is_some()).map(|new_pos| new_pos.unwrap())
+                .collect();
+            let heap = std::collections::BinaryHeap::from_vec(rated_moves);
+            let sorted_moves = heap.into_sorted_vec();
+            for &(_, new_pos) in sorted_moves.iter() {
+                if !visited.contains(&new_pos) {
+                    q.push(new_pos);
+                    visited.insert(new_pos);
+                    steps.insert(new_pos, pos);
                 }
             }
         }
     }}
     Err (GoalUnreachable)
+}
+
+#[inline]
+fn vec_to_set<T: Eq + Hash>(v: Vec<T>) -> HashSet<T> {
+    v.into_iter().collect()
 }
 
 fn reconstruct_path(goal: Position, steps: &HashMap<Position, Position>)
