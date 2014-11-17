@@ -3,8 +3,9 @@
 #[phase(plugin, link)] extern crate log;
 extern crate png;
 
-use std::hash::Hash;
 use std::collections::{HashMap, HashSet};
+use std::hash::Hash;
+use std::num::Float;
 
 pub mod image;
 pub mod map;
