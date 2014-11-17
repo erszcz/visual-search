@@ -25,9 +25,9 @@ Options:
 fn main() {
     let cmdline: Args = Args::docopt().decode().unwrap_or_else(|e| e.exit());
     let mut img = png::load_png(&Path::new(cmdline.arg_src)).unwrap();
-    let start = vec![(1,1)];
-    let goals = vec![(5,5)];
     let map = map::from_png(&img);
+    let start = map.start();
+    let goals = map.goals();
     match search::bfs(start.clone(), goals.clone(), &map,
                       search::WorldShape::Rectangle) {
         Err (e) => stderr!("error: {}", e),
@@ -42,11 +42,10 @@ fn main() {
 }
 
 fn draw_map(map: &Map, img: &mut png::Image) {
-    let points: Vec<(uint,uint)> = range(0, map.width)
-        .flat_map(|x| repeat(x).zip(range(0, map.height)))
+    let points: Vec<(uint,uint)> = map.positions()
         .filter(|&(x,y)| match map.fields[index((x,y), map.width, 1)] {
-            Field::Normal => false,
-            Field::Impassable => true
+            Field::Impassable => true,
+            _ => false
         }).collect();
     image::draw_points(points, BLUE, img);
 }
@@ -55,11 +54,11 @@ fn draw_path(path: search::Path, img: &mut png::Image) {
     image::draw_points(path.fields, WHITE, img)
 }
 
-fn draw_start(start: Vec<search::Position>, img: &mut png::Image) {
+fn draw_start(start: Vec<search::map::Position>, img: &mut png::Image) {
     image::draw_points(start, GREEN, img)
 }
 
-fn draw_goals(goals: Vec<search::Position>, img: &mut png::Image) {
+fn draw_goals(goals: Vec<search::map::Position>, img: &mut png::Image) {
     image::draw_points(goals, RED, img)
 }
 

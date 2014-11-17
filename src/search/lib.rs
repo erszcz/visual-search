@@ -3,6 +3,7 @@
 #[phase(plugin, link)] extern crate log;
 extern crate png;
 
+use map::Position;
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 use std::num::Float;
@@ -18,9 +19,9 @@ struct SearchMap {
 
 impl SearchMap {
     fn is_allowed(&self, pos: Position) -> bool {
-        match self.fields[index(pos, self.width)] {
-            map::Normal => true,
-            map::Impassable => false
+        match self.fields[map::index(pos, self.width)] {
+            map::Impassable => false,
+            _ => true
         }
     }
 
@@ -31,11 +32,6 @@ impl SearchMap {
                     fields: map.fields.clone() }
     }
 }
-
-#[inline]
-fn index((x,y): (uint,uint), width: uint) -> uint { y * width + x }
-
-pub type Position = (uint, uint);
 
 pub struct Path {
     pub fields: Vec<Position>
@@ -108,7 +104,7 @@ fn move_in_rectangle((x,y): Position, d: Direction, m: &SearchMap)
 fn test_move_in_rectangle() {
     let mv = get_move_function(WorldShape::Rectangle);
     let (w,h) = (10,10);
-    let map = Map { width: w, height: h, fields: vec!() };
+    let map = SearchMap { width: w, height: h, fields: vec!() };
     // top-left
     assert_eq!(None, mv((0,0), NW, &map));
     assert_eq!(None, mv((0,0), N, &map));

@@ -2,6 +2,9 @@ extern crate png;
 
 use image;
 use png::{Image};
+use std::iter::{FlatMap, Range, Repeat, Zip};
+
+pub type Position = (uint, uint);
 
 pub struct Map {
     pub width: uint,
@@ -11,9 +14,69 @@ pub struct Map {
 
 #[deriving(Clone)]
 pub enum Field {
+    Start,
+    Goal,
     Normal,
     Impassable
 }
+
+impl Map {
+
+    pub fn start(&self) -> Vec<Position> {
+        self.positions()
+            .filter(|&(x,y)| match self.fields[index((x,y), self.width)] {
+                Start => true,
+                _ => false
+            }).collect()
+    }
+
+    pub fn goals(&self) -> Vec<Position> {
+        self.positions()
+            .filter(|&(x,y)| match self.fields[index((x,y), self.width)] {
+                Goal => true,
+                _ => false
+            }).collect()
+    }
+
+    pub fn positions(&self) -> MapPositions {
+        MapPositions { x: 0, y: 0, width: self.width,
+                       size: self.width * self.height }
+    }
+
+}
+
+pub struct MapPositions { x: uint, y: uint, width: uint, size: uint }
+
+impl Iterator<Position> for MapPositions {
+    fn next(&mut self) -> Option<Position> {
+        let xy = (self.x, self.y);
+        if index(xy, self.width) >= self.size { None }
+        else {
+            if self.x < self.width-1 { self.x += 1 }
+            else {
+                self.x = 0;
+                self.y += 1;
+            }
+            Some (xy)
+        }
+    }
+}
+
+#[test]
+fn test_map_positions() {
+    let m1 = Map { width: 1, height: 1, fields: vec![] };
+    assert_eq!(vec![(0,0)], m1.positions().collect());
+    let m2 = Map { width: 3, height: 2, fields: vec![] };
+    assert_eq!(vec![(0,0),(1,0),(2,0),
+                    (0,1),(1,1),(2,1)], m2.positions().collect());
+    let m3 = Map { width: 2, height: 3, fields: vec![] };
+    assert_eq!(vec![(0,0),(1,0),
+                    (0,1),(1,1),
+                    (0,2),(1,2)], m3.positions().collect());
+}
+
+#[inline]
+pub fn index((x,y): (uint,uint), width: uint) -> uint { y * width + x }
 
 pub fn from_png(img: &Image) -> Map {
     let fields = match img.pixels {
@@ -47,6 +110,8 @@ type ColorRGB8 = (u8, u8, u8);
 
 fn color_to_field((r,g,b): ColorRGB8) -> Field {
     match (r,g,b) {
+        image::RED => Goal,
+        image::GREEN => Start,
         image::BLUE => Impassable,
         _ => Normal
     }
