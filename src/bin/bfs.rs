@@ -11,6 +11,24 @@ macro_rules! stderr(($fmt:expr$(, $msg:expr)*) => {
     (writeln![io::stderr(), $fmt $(, $msg)*]).ok().expect("log failed")
 })
 
+fn main() {
+    let mut img = png::load_png(&Path::new("test/map2.png")).unwrap();
+    let start = vec![(5,5)];
+    let goals = vec![(74,61)];
+    let map = map::from_png(&img);
+    match search::bfs(start.clone(), goals.clone(), &map,
+                      search::WorldShape::Rectangle) {
+        Err (e) => stderr!("error: {}", e),
+        Ok (path) => {
+            draw_path(path, &mut img);
+            draw_start(start, &mut img);
+            draw_goals(goals, &mut img);
+            draw_map(&map, &mut img);
+            write_image(&mut img);
+        }
+    }
+}
+
 fn draw_map(map: &Map, img: &mut png::Image) {
     let points: Vec<(uint,uint)> = range(0, map.width)
         .flat_map(|x| repeat(x).zip(range(0, map.height)))
@@ -40,22 +58,4 @@ pub fn write_image(img: &mut png::Image) {
 
 fn index((x,y): (uint,uint), width: uint, bytes_per_color: uint) -> uint {
     y * width * bytes_per_color + x * bytes_per_color
-}
-
-fn main() {
-    let mut img = png::load_png(&Path::new("test/map2.png")).unwrap();
-    let start = vec![(5,5)];
-    let goals = vec![(74,61)];
-    let map = map::from_png(&img);
-    match search::bfs(start.clone(), goals.clone(), &map,
-                      search::WorldShape::Rectangle) {
-        Err (e) => stderr!("error: {}", e),
-        Ok (path) => {
-            draw_path(path, &mut img);
-            draw_start(start, &mut img);
-            draw_goals(goals, &mut img);
-            draw_map(&map, &mut img);
-            write_image(&mut img);
-        }
-    }
 }
