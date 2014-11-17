@@ -43,7 +43,7 @@ fn main() {
 
 fn draw_map(map: &Map, img: &mut png::Image) {
     let points: Vec<(uint,uint)> = map.positions()
-        .filter(|&(x,y)| match map.fields[index((x,y), map.width, 1)] {
+        .filter(|&(x,y)| match map[(x,y)] {
             Field::Impassable => true,
             _ => false
         }).collect();
@@ -65,8 +65,4 @@ fn draw_goals(goals: Vec<search::map::Position>, img: &mut png::Image) {
 pub fn write_image(img: &mut png::Image, dst: &str) {
     let res = png::store_png(img, &Path::new(dst));
     assert!(res.is_ok());
-}
-
-fn index((x,y): (uint,uint), width: uint, bytes_per_color: uint) -> uint {
-    y * width * bytes_per_color + x * bytes_per_color
 }

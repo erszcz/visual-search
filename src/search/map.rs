@@ -24,7 +24,7 @@ impl Map {
 
     pub fn start(&self) -> Vec<Position> {
         self.positions()
-            .filter(|&(x,y)| match self.fields[index((x,y), self.width)] {
+            .filter(|&(x,y)| match self[(x,y)] {
                 Start => true,
                 _ => false
             }).collect()
@@ -32,7 +32,7 @@ impl Map {
 
     pub fn goals(&self) -> Vec<Position> {
         self.positions()
-            .filter(|&(x,y)| match self.fields[index((x,y), self.width)] {
+            .filter(|&(x,y)| match self[(x,y)] {
                 Goal => true,
                 _ => false
             }).collect()
@@ -59,6 +59,12 @@ impl Iterator<Position> for MapPositions {
             }
             Some (xy)
         }
+    }
+}
+
+impl Index<Position, Field> for Map {
+    fn index<'a>(&'a self, pos: &Position) -> &'a Field {
+        &self.fields[index(*pos, self.width)]
     }
 }
 
