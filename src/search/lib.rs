@@ -1,3 +1,6 @@
+#![feature(phase)]
+
+#[phase(plugin, link)] extern crate log;
 extern crate png;
 
 use std::hash::Hash;
@@ -168,10 +171,9 @@ pub fn bfs(start: Vec<Position>, vgoals: Vec<Position>,
     loop { match q.remove(0) {
         None => break,
         Some (pos) => {
-            println!("visited: {}", visited);
-            println!("current: {}", pos);
-            println!("steps  : {}", steps);
-            println!("");
+            debug!("visited: {}", visited);
+            debug!("current: {}", pos);
+            debug!("steps  : {}", steps);
             if goals.contains(&pos) {
                 let path = reconstruct_path(pos, &steps);
                 return Ok (Path { fields: path })

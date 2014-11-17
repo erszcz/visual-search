@@ -1,8 +1,15 @@
+#![feature(macro_rules)]
+
 extern crate png;
 extern crate search;
 
 use search::image::{mod, BLUE, GREEN, RED, WHITE};
 use search::map::{mod, Field, Map};
+use std::io;
+
+macro_rules! stderr(($fmt:expr$(, $msg:expr)*) => {
+    (writeln![io::stderr(), $fmt $(, $msg)*]).ok().expect("log failed")
+})
 
 fn draw_map(map: &Map, img: &mut png::Image) {
     let points: Vec<(uint,uint)> = range(0, map.width)
@@ -11,7 +18,6 @@ fn draw_map(map: &Map, img: &mut png::Image) {
             Field::Normal => false,
             Field::Impassable => true
         }).collect();
-    println!("points: {}", points);
     image::draw_points(points, BLUE, img);
 }
 
@@ -38,12 +44,12 @@ fn index((x,y): (uint,uint), width: uint, bytes_per_color: uint) -> uint {
 
 fn main() {
     let mut img = png::load_png(&Path::new("test/map2.png")).unwrap();
-    let start = vec!((1,1));
-    let goals = vec!((5,5));
+    let start = vec![(5,5)];
+    let goals = vec![(74,61)];
     let map = map::from_png(&img);
     match search::bfs(start.clone(), goals.clone(), &map,
                       search::WorldShape::Rectangle) {
-        Err (e) => println!("error: {}", e),
+        Err (e) => stderr!("error: {}", e),
         Ok (path) => {
             draw_path(path, &mut img);
             draw_start(start, &mut img);
