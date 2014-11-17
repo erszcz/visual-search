@@ -1,8 +1,7 @@
 extern crate png;
 
 use image;
-use png::{Image};
-use std::iter::{FlatMap, Range, Repeat, Zip};
+use png::Image;
 
 pub type Position = (uint, uint);
 
