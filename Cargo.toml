@@ -14,8 +14,8 @@ name = "search"
 path = "src/search/lib.rs"
 
 [[bin]]
-name = "bfs"
-path = "src/bin/bfs.rs"
+name = "search"
+path = "src/bin/search.rs"
 
 [profile.release]
 opt-level = 3

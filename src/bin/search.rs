@@ -15,11 +15,12 @@ macro_rules! stderr(($fmt:expr$(, $msg:expr)*) => {
 })
 
 docopt!(Args deriving Show, "
-Usage: bfs <src> <dst>
-       bfs --help
+Usage: search [-m METHOD] <src> <dst>
+       search --help
 
 Options:
-  -h, --help       Show this message.
+  -m METHOD         Search method: bfs or greedy.
+  -h, --help        Show this message.
 ")
 
 fn main() {
@@ -28,7 +29,12 @@ fn main() {
     let map = map::from_png(&img);
     let start = map.start();
     let goals = map.goals();
-    match search::bfs(start.clone(), goals.clone(), &map,
+    let method = match cmdline.flag_m.as_slice() {
+        "bfs" => search::bfs,
+        "greedy" => search::greedy,
+        _ => search::bfs
+    };
+    match method(start.clone(), goals.clone(), &map,
                       search::WorldShape::Rectangle) {
         Err (e) => stderr!("error: {}", e),
         Ok (path) => {
