@@ -243,6 +243,57 @@ pub fn greedy(start: Vec<Position>, vgoals: Vec<Position>,
     Err (GoalUnreachable)
 }
 
+pub fn astar(start: Vec<Position>, vgoals: Vec<Position>,
+             initial_map: &map::Map, world_shape: WorldShape) -> Result {
+    let map = &SearchMap::from_map(initial_map);
+    assert_eq!(1, start.len());
+    assert_eq!(1, vgoals.len());
+    let mv = get_move_function(world_shape);
+    let goals = vec_to_set(vgoals.clone());
+    let mut visited = vec_to_set(start.clone());
+    let mut steps = HashMap::new();
+    let mut g_score = HashMap::new();
+    let start0 = start[0].clone();
+    g_score.insert(start0, 0);
+    let mut f_score = HashMap::new();
+    f_score.insert(start0, g_score[start0] + distance(start0, vgoals[0]));
+    let mut pq = BinaryHeap::new();
+    pq.push( ( - f_score[start0], start0 ) );
+    loop {
+        let pos = match pq.pop() {
+            None => break,
+            Some ((_, pos)) => pos
+        };
+        debug!("visited: {}", visited);
+        debug!("current: {}", pos);
+        debug!("steps  : {}", steps);
+        if goals.contains(&pos) {
+            let path = reconstruct_path(pos, &steps);
+            return Ok (Path { fields: path })
+        }
+        let moves: Vec<Position> = Direction::iter()
+            .map(|d| mv(pos, d, map))
+            .filter(|maybe_new_pos| match *maybe_new_pos {
+                None => false,
+                Some (new_pos) => map.is_allowed(new_pos)
+            }).map(|new_pos| new_pos.unwrap())
+            .collect();
+        for new_pos in moves.iter() {
+            let tentative_g_score = g_score[pos] + 1;
+            if (!visited.contains(new_pos)
+                || (g_score.contains_key(new_pos)
+                    && tentative_g_score < g_score[*new_pos])) {
+                g_score.insert(*new_pos, tentative_g_score);
+                f_score.insert(*new_pos, tentative_g_score + distance(*new_pos, vgoals[0]));
+                pq.push((- f_score[*new_pos], *new_pos));
+                visited.insert(*new_pos);
+                steps.insert(*new_pos, pos);
+            }
+        }
+    }
+    Err (GoalUnreachable)
+}
+
 #[inline]
 fn vec_to_set<T: Eq + Hash>(v: Vec<T>) -> HashSet<T> {
     v.into_iter().collect()

@@ -19,7 +19,7 @@ Usage: search [-m METHOD] <src> <dst>
        search --help
 
 Options:
-  -m METHOD         Search method: bfs or greedy.
+  -m METHOD         Search method: bfs, greedy or astar.
   -h, --help        Show this message.
 ")
 
@@ -32,6 +32,7 @@ fn main() {
     let method = match cmdline.flag_m.as_slice() {
         "bfs" => search::bfs,
         "greedy" => search::greedy,
+        "astar" => search::astar,
         _ => search::bfs
     };
     match method(start.clone(), goals.clone(), &map,
