@@ -6,7 +6,7 @@ extern crate png;
 extern crate search;
 extern crate serialize;
 
-use search::image::{mod, BLUE, GREEN, RED, WHITE};
+use search::image::{mod, BLUE, GRAY, GREEN, RED, WHITE};
 use search::map::{mod, Field, Map};
 use std::io;
 
@@ -38,10 +38,12 @@ fn main() {
     match method(start.clone(), goals.clone(), &map,
                       search::WorldShape::Rectangle) {
         Err (e) => stderr!("error: {}", e),
-        Ok (path) => {
+        Ok (search) => {
+            draw_visited(search.visited, &mut img);
+            let path = search.paths[0].clone();
             draw_path(path, &mut img);
-            draw_start(start, &mut img);
-            draw_goals(goals, &mut img);
+            draw_start(search.start, &mut img);
+            draw_goals(search.goals, &mut img);
             draw_map(&map, &mut img);
             write_image(&mut img, cmdline.arg_dst.as_slice());
         }
@@ -55,6 +57,11 @@ fn draw_map(map: &Map, img: &mut png::Image) {
             _ => false
         }).collect();
     image::draw_points(points, BLUE, img);
+}
+
+
+fn draw_visited(visited: Vec<search::map::Position>, img: &mut png::Image) {
+    image::draw_points(visited, GRAY, img)
 }
 
 fn draw_path(path: search::Path, img: &mut png::Image) {

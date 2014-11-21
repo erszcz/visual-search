@@ -3,6 +3,7 @@ extern crate png;
 pub type ColorRGB8 = (u8,u8,u8);
 
 pub const WHITE: ColorRGB8 = (255,255,255);
+pub const GRAY : ColorRGB8 = (128,128,128);
 pub const BLACK: ColorRGB8 = (  0,  0,  0);
 pub const RED  : ColorRGB8 = (255,  0,  0);
 pub const GREEN: ColorRGB8 = (  0,255,  0);

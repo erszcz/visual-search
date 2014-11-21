@@ -33,6 +33,7 @@ impl SearchMap {
     }
 }
 
+#[deriving(Clone)]
 pub struct Path {
     pub fields: Vec<Position>
 }
@@ -148,7 +149,14 @@ pub enum Error {
     GoalUnreachable
 }
 
-pub type Result = std::result::Result<Path, Error>;
+pub type Result = std::result::Result<Search, Error>;
+
+pub struct Search {
+    pub start: Vec<Position>,
+    pub goals: Vec<Position>,
+    pub paths: Vec<Path>,
+    pub visited: Vec<Position>
+}
 
 fn distance((x1,y1): Position, (x2,y2): Position) -> int {
     let (fx1, fy1, fx2, fy2) = (x1 as f64, y1 as f64, x2 as f64, y2 as f64);
@@ -163,7 +171,7 @@ pub fn bfs(start: Vec<Position>, vgoals: Vec<Position>,
     let mv = get_move_function(world_shape);
     let mut q = start.clone();
     let goals = vec_to_set(vgoals.clone());
-    let mut visited = vec_to_set(start);
+    let mut visited = vec_to_set(start.clone());
     let mut steps = HashMap::new();
     loop { match q.remove(0) {
         None => break,
@@ -173,7 +181,10 @@ pub fn bfs(start: Vec<Position>, vgoals: Vec<Position>,
             debug!("steps  : {}", steps);
             if goals.contains(&pos) {
                 let path = reconstruct_path(pos, &steps);
-                return Ok (Path { fields: path })
+                return Ok (Search { start: start,
+                                    goals: vgoals,
+                                    paths: vec![Path { fields: path }],
+                                    visited: visited.into_iter().collect() })
             }
             let rated_moves: Vec<(int, Position)> = Direction::iter()
                 .map(|d| mv(pos, d, map))
@@ -208,7 +219,7 @@ pub fn greedy(start: Vec<Position>, vgoals: Vec<Position>,
     let mut pq = BinaryHeap::new();
     pq.push( ( - distance(start[0], vgoals[0]), start[0] ) );
     let goals = vec_to_set(vgoals.clone());
-    let mut visited = vec_to_set(start);
+    let mut visited = vec_to_set(start.clone());
     let mut steps = HashMap::new();
     loop {
         let (_, pos) = match pq.pop() {
@@ -220,7 +231,10 @@ pub fn greedy(start: Vec<Position>, vgoals: Vec<Position>,
         debug!("steps  : {}", steps);
         if goals.contains(&pos) {
             let path = reconstruct_path(pos, &steps);
-            return Ok (Path { fields: path })
+            return Ok (Search { start: start,
+                                goals: vgoals,
+                                paths: vec![Path { fields: path }],
+                                visited: visited.into_iter().collect() })
         }
         let moves: Vec<(int, Position)> = Direction::iter()
             .map(|d| mv(pos, d, map))
@@ -269,7 +283,10 @@ pub fn astar(start: Vec<Position>, vgoals: Vec<Position>,
         debug!("steps  : {}", steps);
         if goals.contains(&pos) {
             let path = reconstruct_path(pos, &steps);
-            return Ok (Path { fields: path })
+            return Ok (Search { start: start,
+                                goals: vgoals,
+                                paths: vec![Path { fields: path }],
+                                visited: visited.into_iter().collect() })
         }
         let moves: Vec<Position> = Direction::iter()
             .map(|d| mv(pos, d, map))
