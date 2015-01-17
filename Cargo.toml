@@ -3,11 +3,29 @@ name = "search"
 version = "0.0.1"
 authors = ["Radek Szymczyszyn <lavrin@gmail.com>"]
 
+[dependencies]
+rustc-serialize = "0.2"
+
+[dependencies.docopt]
+git = "git://github.com/docopt/docopt.rs"
+
 [dependencies.docopt_macros]
 git = "git://github.com/docopt/docopt.rs"
 
 [dependencies.png]
-git = "https://github.com/servo/rust-png"
+git = "https://github.com/lavrin/rust-png"
+
+[dependencies.piston2d-sprite]
+git = "https://github.com/pistondevelopers/sprite"
+
+[dependencies.pistoncore-sdl2_window]
+git = "https://github.com/pistondevelopers/sdl2_window"
+
+[dependencies.pistoncore-event]
+git = "https://github.com/pistondevelopers/event"
+
+[dependencies.piston2d-opengl_graphics]
+git = "https://github.com/pistondevelopers/opengl_graphics"
 
 [lib]
 name = "search"
@@ -16,6 +34,10 @@ path = "src/search/lib.rs"
 [[bin]]
 name = "search"
 path = "src/bin/search.rs"
+
+[[bin]]
+name = "vis"
+path = "src/bin/vis.rs"
 
 [profile.release]
 opt-level = 3

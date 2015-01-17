@@ -2,16 +2,18 @@ extern crate png;
 
 use image;
 use png::Image;
+use png::PixelsByColorType::{K8, KA8, RGB8, RGBA8};
+use std::ops::Index;
 
-pub type Position = (uint, uint);
+pub type Position = (usize, usize);
 
 pub struct Map {
-    pub width: uint,
-    pub height: uint,
+    pub width: usize,
+    pub height: usize,
     pub fields: Vec<Field>
 }
 
-#[deriving(Clone)]
+#[derive(Clone)]
 pub enum Field {
     Start,
     Goal,
@@ -24,7 +26,7 @@ impl Map {
     pub fn start(&self) -> Vec<Position> {
         self.positions()
             .filter(|&(x,y)| match self[(x,y)] {
-                Start => true,
+                Field::Start => true,
                 _ => false
             }).collect()
     }
@@ -32,7 +34,7 @@ impl Map {
     pub fn goals(&self) -> Vec<Position> {
         self.positions()
             .filter(|&(x,y)| match self[(x,y)] {
-                Goal => true,
+                Field::Goal => true,
                 _ => false
             }).collect()
     }
@@ -44,9 +46,11 @@ impl Map {
 
 }
 
-pub struct MapPositions { x: uint, y: uint, width: uint, size: uint }
+pub struct MapPositions { x: usize, y: usize, width: usize, size: usize }
 
-impl Iterator<Position> for MapPositions {
+impl Iterator for MapPositions {
+    type Item = Position;
+
     fn next(&mut self) -> Option<Position> {
         let xy = (self.x, self.y);
         if index(xy, self.width) >= self.size { None }
@@ -61,7 +65,9 @@ impl Iterator<Position> for MapPositions {
     }
 }
 
-impl Index<Position, Field> for Map {
+impl Index<Position> for Map {
+    type Output = Field;
+
     fn index<'a>(&'a self, pos: &Position) -> &'a Field {
         &self.fields[index(*pos, self.width)]
     }
@@ -81,24 +87,25 @@ fn test_map_positions() {
 }
 
 #[inline]
-pub fn index((x,y): (uint,uint), width: uint) -> uint { y * width + x }
+pub fn index((x,y): (usize,usize), width: usize) -> usize { y * width + x }
 
 pub fn from_png(img: &Image) -> Map {
     let fields = match img.pixels {
-        png::RGB8(ref pixels) => rgbpixels_to_fields(pixels, img.width as uint,
-                                                     img.height as uint, 3),
-        png::RGBA8(ref pixels) => rgbpixels_to_fields(pixels, img.width as uint,
-                                                      img.height as uint, 4),
-        png::K8(_) => panic_mode("K8"),
-        png::KA8(_) => panic_mode("KA8"),
+        RGB8(ref pixels) => rgbpixels_to_fields(pixels, img.width as usize,
+                                                img.height as usize, 3),
+        RGBA8(ref pixels) => rgbpixels_to_fields(pixels, img.width as usize,
+                                                 img.height as usize, 4),
+        K8(_) => panic_mode("K8"),
+        KA8(_) => panic_mode("KA8"),
     };
-    Map { width: img.width as uint, height: img.height as uint,
+    Map { width: img.width as usize, height: img.height as usize,
           fields: fields }
 }
 
-fn rgbpixels_to_fields(pixels: &Vec<u8>, width: uint, height: uint,
-                       bytes_per_pixel: uint) -> Vec<Field> {
-    let mut fields = Vec::from_elem(width * height, Field::Normal);
+fn rgbpixels_to_fields(pixels: &Vec<u8>, width: usize, height: usize,
+                       bytes_per_pixel: usize) -> Vec<Field> {
+    let mut fields: Vec<Field> =
+        range(0, width * height).map(|_| Field::Normal).collect();
     for i in range(0, width * height) {
         let j = i * bytes_per_pixel;
         let color: ColorRGB8 = (pixels[j], pixels[j+1], pixels[j+2]);
@@ -115,9 +122,9 @@ type ColorRGB8 = (u8, u8, u8);
 
 fn color_to_field((r,g,b): ColorRGB8) -> Field {
     match (r,g,b) {
-        image::RED => Goal,
-        image::GREEN => Start,
-        image::BLUE => Impassable,
-        _ => Normal
+        image::RED => Field::Goal,
+        image::GREEN => Field::Start,
+        image::BLUE => Field::Impassable,
+        _ => Field::Normal
     }
 }

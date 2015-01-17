@@ -1,26 +1,24 @@
-#![feature(phase)]
-
-#[phase(plugin, link)] extern crate log;
+#[macro_use] extern crate log;
 extern crate png;
 
 use map::Position;
 use std::collections::{BinaryHeap, HashMap, HashSet};
-use std::hash::Hash;
+use std::hash::{Hash, Hasher};
 use std::num::Float;
 
 pub mod image;
 pub mod map;
 
 struct SearchMap {
-    width: uint,
-    height: uint,
+    width: usize,
+    height: usize,
     fields: Vec<map::Field>
 }
 
 impl SearchMap {
     fn is_allowed(&self, pos: Position) -> bool {
         match self.fields[map::index(pos, self.width)] {
-            map::Impassable => false,
+            map::Field::Impassable => false,
             _ => true
         }
     }
@@ -33,7 +31,7 @@ impl SearchMap {
     }
 }
 
-#[deriving(Clone)]
+#[derive(Clone)]
 pub struct Path {
     pub fields: Vec<Position>
 }
@@ -56,23 +54,25 @@ enum Direction {
 
 impl Direction {
     fn iter() -> DirectionIter {
-        DirectionIter { dir: N }
+        DirectionIter { dir: Direction::N }
     }
 }
 
 struct DirectionIter { dir: Direction }
 
-impl Iterator<Direction> for DirectionIter {
+impl Iterator for DirectionIter {
+    type Item = Direction;
+
     fn next(&mut self) -> Option<Direction> {
         match self.dir {
-            N  => { self.dir = NE; Some (NE) },
-            NE => { self.dir = E;  Some (E)  },
-            E  => { self.dir = SE; Some (SE) },
-            SE => { self.dir = S;  Some (S)  },
-            S  => { self.dir = SW; Some (SW) },
-            SW => { self.dir = W;  Some (W)  },
-            W  => { self.dir = NW; Some (NW) }
-            NW => None
+            Direction::N  => { self.dir = Direction::NE; Some (Direction::NE) },
+            Direction::NE => { self.dir = Direction::E;  Some (Direction::E)  },
+            Direction::E  => { self.dir = Direction::SE; Some (Direction::SE) },
+            Direction::SE => { self.dir = Direction::S;  Some (Direction::S)  },
+            Direction::S  => { self.dir = Direction::SW; Some (Direction::SW) },
+            Direction::SW => { self.dir = Direction::W;  Some (Direction::W)  },
+            Direction::W  => { self.dir = Direction::NW; Some (Direction::NW) }
+            Direction::NW => None
         }
     }
 }
@@ -80,7 +80,7 @@ impl Iterator<Direction> for DirectionIter {
 fn get_move_function(shape: WorldShape)
         -> fn(Position, Direction, &SearchMap) -> Option<Position> {
     match shape {
-        Rectangle => move_in_rectangle,
+        WorldShape::Rectangle => move_in_rectangle,
         //Torus => |(x,y)| {
 
         //}
@@ -90,14 +90,14 @@ fn get_move_function(shape: WorldShape)
 fn move_in_rectangle((x,y): Position, d: Direction, m: &SearchMap)
         -> Option<Position> {
     match d {
-        N  => if y > 0 { Some ((x, y-1)) } else { None },
-        NE => if y > 0 && x < m.width-1 { Some ((x+1, y-1)) } else { None },
-        E  => if x < m.width-1 { Some ((x+1, y)) } else { None },
-        SE => if y < m.height-1 && x < m.width-1 { Some ((x+1, y+1)) } else { None },
-        S  => if y < m.height-1 { Some ((x, y+1)) } else { None },
-        SW => if y < m.height-1 && x > 0 { Some ((x-1, y+1)) } else { None },
-        W  => if x > 0 { Some ((x-1, y)) } else { None },
-        NW => if y > 0 && x > 0 { Some ((x-1, y-1)) } else { None }
+        Direction::N  => if y > 0 { Some ((x, y-1)) } else { None },
+        Direction::NE => if y > 0 && x < m.width-1 { Some ((x+1, y-1)) } else { None },
+        Direction::E  => if x < m.width-1 { Some ((x+1, y)) } else { None },
+        Direction::SE => if y < m.height-1 && x < m.width-1 { Some ((x+1, y+1)) } else { None },
+        Direction::S  => if y < m.height-1 { Some ((x, y+1)) } else { None },
+        Direction::SW => if y < m.height-1 && x > 0 { Some ((x-1, y+1)) } else { None },
+        Direction::W  => if x > 0 { Some ((x-1, y)) } else { None },
+        Direction::NW => if y > 0 && x > 0 { Some ((x-1, y-1)) } else { None }
     }
 }
 
@@ -107,33 +107,33 @@ fn test_move_in_rectangle() {
     let (w,h) = (10,10);
     let map = SearchMap { width: w, height: h, fields: vec!() };
     // top-left
-    assert_eq!(None, mv((0,0), NW, &map));
-    assert_eq!(None, mv((0,0), N, &map));
-    assert_eq!(None, mv((0,0), W, &map));
+    assert_eq!(None, mv((0,0), Direction::NW, &map));
+    assert_eq!(None, mv((0,0), Direction::N, &map));
+    assert_eq!(None, mv((0,0), Direction::W, &map));
     // top-right
-    assert_eq!(None, mv((9,0), NE, &map));
-    assert_eq!(None, mv((9,0), N, &map));
-    assert_eq!(None, mv((9,0), E, &map));
+    assert_eq!(None, mv((9,0), Direction::NE, &map));
+    assert_eq!(None, mv((9,0), Direction::N, &map));
+    assert_eq!(None, mv((9,0), Direction::E, &map));
     // bottom-right
-    assert_eq!(None, mv((9,9), SE, &map));
-    assert_eq!(None, mv((9,9), S, &map));
-    assert_eq!(None, mv((9,9), E, &map));
+    assert_eq!(None, mv((9,9), Direction::SE, &map));
+    assert_eq!(None, mv((9,9), Direction::S, &map));
+    assert_eq!(None, mv((9,9), Direction::E, &map));
     // bottom-left
-    assert_eq!(None, mv((0,9), SW, &map));
-    assert_eq!(None, mv((0,9), S, &map));
-    assert_eq!(None, mv((0,9), W, &map));
+    assert_eq!(None, mv((0,9), Direction::SW, &map));
+    assert_eq!(None, mv((0,9), Direction::S, &map));
+    assert_eq!(None, mv((0,9), Direction::W, &map));
     // top
     for x in range(0,w)
-        { assert_eq!(None, mv((x,0), N, &map)) }
+        { assert_eq!(None, mv((x,0), Direction::N, &map)) }
     // bottom
     for x in range(0,w)
-        { assert_eq!(None, mv((x,h-1), S, &map)) }
+        { assert_eq!(None, mv((x,h-1), Direction::S, &map)) }
     // left
     for y in range(0,h)
-        { assert_eq!(None, mv((0,y), W, &map)) }
+        { assert_eq!(None, mv((0,y), Direction::W, &map)) }
     // right
     for y in range(0,h)
-        { assert_eq!(None, mv((w-1,y), E, &map)) }
+        { assert_eq!(None, mv((w-1,y), Direction::E, &map)) }
     // middle
     for x in range(1,w-1) {
         for y in range(1,h-1) {
@@ -144,7 +144,7 @@ fn test_move_in_rectangle() {
     }
 }
 
-#[deriving(Show)]
+#[derive(Show)]
 pub enum Error {
     GoalUnreachable
 }
@@ -158,9 +158,9 @@ pub struct Search {
     pub visited: Vec<Position>
 }
 
-fn distance((x1,y1): Position, (x2,y2): Position) -> int {
+fn distance((x1,y1): Position, (x2,y2): Position) -> isize {
     let (fx1, fy1, fx2, fy2) = (x1 as f64, y1 as f64, x2 as f64, y2 as f64);
-    ( (fx2-fx1) * (fx2-fx1) + (fy2-fy1) * (fy2-fy1) ).sqrt() as int
+    ( (fx2-fx1) * (fx2-fx1) + (fy2-fy1) * (fy2-fy1) ).sqrt() as isize
 }
 
 pub fn bfs(start: Vec<Position>, vgoals: Vec<Position>,
@@ -173,41 +173,39 @@ pub fn bfs(start: Vec<Position>, vgoals: Vec<Position>,
     let goals = vec_to_set(vgoals.clone());
     let mut visited = vec_to_set(start.clone());
     let mut steps = HashMap::new();
-    loop { match q.remove(0) {
-        None => break,
-        Some (pos) => {
-            debug!("visited: {}", visited);
-            debug!("current: {}", pos);
-            debug!("steps  : {}", steps);
-            if goals.contains(&pos) {
-                let path = reconstruct_path(pos, &steps);
-                return Ok (Search { start: start,
-                                    goals: vgoals,
-                                    paths: vec![Path { fields: path }],
-                                    visited: visited.into_iter().collect() })
-            }
-            let rated_moves: Vec<(int, Position)> = Direction::iter()
-                .map(|d| mv(pos, d, map))
-                .map(|maybe_new_pos| match maybe_new_pos {
-                    None => None,
-                    Some (new_pos) =>
-                        if !map.is_allowed(new_pos) { None }
-                        else { Some ((distance(new_pos, vgoals[0]), new_pos)) }
-                })
-                .filter(|new_pos| new_pos.is_some()).map(|new_pos| new_pos.unwrap())
-                .collect();
-            let heap = BinaryHeap::from_vec(rated_moves);
-            let sorted_moves = heap.into_sorted_vec();
-            for &(_, new_pos) in sorted_moves.iter() {
-                if !visited.contains(&new_pos) {
-                    q.push(new_pos);
-                    visited.insert(new_pos);
-                    steps.insert(new_pos, pos);
-                }
+    loop {
+        let pos = q.remove(0);
+        debug!("visited: {:?}", visited);
+        debug!("current: {:?}", pos);
+        debug!("steps  : {:?}", steps);
+        if goals.contains(&pos) {
+            let path = reconstruct_path(pos, &steps);
+            return Ok (Search { start: start,
+                                goals: vgoals,
+                                paths: vec![Path { fields: path }],
+                                visited: visited.into_iter().collect() })
+        }
+        let rated_moves: Vec<(isize, Position)> = Direction::iter()
+            .map(|d| mv(pos, d, map))
+            .map(|maybe_new_pos| match maybe_new_pos {
+                None => None,
+                Some (new_pos) =>
+                    if !map.is_allowed(new_pos) { None }
+                    else { Some ((distance(new_pos, vgoals[0]), new_pos)) }
+            })
+            .filter(|new_pos| new_pos.is_some()).map(|new_pos| new_pos.unwrap())
+            .collect();
+        let heap = BinaryHeap::from_vec(rated_moves);
+        let sorted_moves = heap.into_sorted_vec();
+        for &(_, new_pos) in sorted_moves.iter() {
+            if !visited.contains(&new_pos) {
+                q.push(new_pos);
+                visited.insert(new_pos);
+                steps.insert(new_pos, pos);
             }
         }
-    }}
-    Err (GoalUnreachable)
+    }
+    Err (Error::GoalUnreachable)
 }
 
 pub fn greedy(start: Vec<Position>, vgoals: Vec<Position>,
@@ -226,9 +224,9 @@ pub fn greedy(start: Vec<Position>, vgoals: Vec<Position>,
             None => break,
             Some (pos) => pos
         };
-        debug!("visited: {}", visited);
-        debug!("current: {}", pos);
-        debug!("steps  : {}", steps);
+        debug!("visited: {:?}", visited);
+        debug!("current: {:?}", pos);
+        debug!("steps  : {:?}", steps);
         if goals.contains(&pos) {
             let path = reconstruct_path(pos, &steps);
             return Ok (Search { start: start,
@@ -236,7 +234,7 @@ pub fn greedy(start: Vec<Position>, vgoals: Vec<Position>,
                                 paths: vec![Path { fields: path }],
                                 visited: visited.into_iter().collect() })
         }
-        let moves: Vec<(int, Position)> = Direction::iter()
+        let moves: Vec<(isize, Position)> = Direction::iter()
             .map(|d| mv(pos, d, map))
             .map(|maybe_new_pos| match maybe_new_pos {
                 None => None,
@@ -254,7 +252,7 @@ pub fn greedy(start: Vec<Position>, vgoals: Vec<Position>,
             }
         }
     }
-    Err (GoalUnreachable)
+    Err (Error::GoalUnreachable)
 }
 
 pub fn astar(start: Vec<Position>, vgoals: Vec<Position>,
@@ -278,9 +276,9 @@ pub fn astar(start: Vec<Position>, vgoals: Vec<Position>,
             None => break,
             Some ((_, pos)) => pos
         };
-        debug!("visited: {}", visited);
-        debug!("current: {}", pos);
-        debug!("steps  : {}", steps);
+        debug!("visited: {:?}", visited);
+        debug!("current: {:?}", pos);
+        debug!("steps  : {:?}", steps);
         if goals.contains(&pos) {
             let path = reconstruct_path(pos, &steps);
             return Ok (Search { start: start,
@@ -308,11 +306,11 @@ pub fn astar(start: Vec<Position>, vgoals: Vec<Position>,
             }
         }
     }
-    Err (GoalUnreachable)
+    Err (Error::GoalUnreachable)
 }
 
 #[inline]
-fn vec_to_set<T: Eq + Hash>(v: Vec<T>) -> HashSet<T> {
+fn vec_to_set(v: Vec<Position>) -> HashSet<Position> {
     v.into_iter().collect()
 }
 

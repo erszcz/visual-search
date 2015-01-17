@@ -1,27 +1,32 @@
-#![feature(macro_rules, phase)]
-
-#[phase(plugin)] extern crate docopt_macros;
+#![feature(plugin)]
+extern crate "rustc-serialize" as rustc_serialize;
 extern crate docopt;
+#[plugin] #[no_link] extern crate docopt_macros;
+
 extern crate png;
 extern crate search;
-extern crate serialize;
 
-use search::image::{mod, BLUE, GRAY, GREEN, RED, WHITE};
-use search::map::{mod, Field, Map};
+use search::image::{self, BLUE, GRAY, GREEN, RED, WHITE};
+use search::map::{self, Field, Map};
 use std::io;
 
-macro_rules! stderr(($fmt:expr$(, $msg:expr)*) => {
-    (writeln![io::stderr(), $fmt $(, $msg)*]).ok().expect("log failed")
-})
+macro_rules! errorln {
+    ($fmt:expr) => {
+        (writeln![&mut io::stdio::stderr(), $fmt]).ok().expect("log failed")
+    };
+    ($fmt:expr, $($msg:tt)*) => {
+        (writeln![&mut io::stdio::stderr(), $fmt, $($msg)*]).ok().expect("log failed")
+    };
+}
 
-docopt!(Args deriving Show, "
+docopt!{Args derive Show, "
 Usage: search [-m METHOD] <src> <dst>
        search --help
 
 Options:
   -m METHOD         Search method: bfs, greedy or astar.
   -h, --help        Show this message.
-")
+"}
 
 fn main() {
     let cmdline: Args = Args::docopt().decode().unwrap_or_else(|e| e.exit());
@@ -29,15 +34,19 @@ fn main() {
     let map = map::from_png(&img);
     let start = map.start();
     let goals = map.goals();
-    let method = match cmdline.flag_m.as_slice() {
-        "bfs" => search::bfs,
-        "greedy" => search::greedy,
-        "astar" => search::astar,
-        _ => search::bfs
+    let search_result = match cmdline.flag_m.as_slice() {
+        "greedy" =>
+            search::greedy(start.clone(), goals.clone(), &map,
+                           search::WorldShape::Rectangle),
+        "astar" =>
+            search::astar(start.clone(), goals.clone(), &map,
+                          search::WorldShape::Rectangle),
+        "bfs" | _ =>
+            search::bfs(start.clone(), goals.clone(), &map,
+                        search::WorldShape::Rectangle)
     };
-    match method(start.clone(), goals.clone(), &map,
-                      search::WorldShape::Rectangle) {
-        Err (e) => stderr!("error: {}", e),
+    match search_result {
+        Err (e) => errorln!("error: {:?}", e),
         Ok (search) => {
             draw_visited(search.visited, &mut img);
             let path = search.paths[0].clone();
