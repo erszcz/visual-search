@@ -1,6 +1,6 @@
 extern crate png;
 
-use image;
+use png_image;
 use png::Image;
 use png::PixelsByColorType::{K8, KA8, RGB8, RGBA8};
 use std::ops::Index;
@@ -122,9 +122,9 @@ type ColorRGB8 = (u8, u8, u8);
 
 fn color_to_field((r,g,b): ColorRGB8) -> Field {
     match (r,g,b) {
-        image::RED => Field::Goal,
-        image::GREEN => Field::Start,
-        image::BLUE => Field::Impassable,
+        png_image::RED => Field::Goal,
+        png_image::GREEN => Field::Start,
+        png_image::BLUE => Field::Impassable,
         _ => Field::Normal
     }
 }

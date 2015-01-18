@@ -6,7 +6,7 @@ extern crate docopt;
 extern crate png;
 extern crate search;
 
-use search::image::{self, BLUE, GRAY, GREEN, RED, WHITE};
+use search::png_image::{self, BLUE, GRAY, GREEN, RED, WHITE};
 use search::map::{self, Field, Map};
 use std::io;
 
@@ -65,24 +65,24 @@ fn draw_map(map: &Map, img: &mut png::Image) {
             Field::Impassable => true,
             _ => false
         }).collect();
-    image::draw_points(points, BLUE, img);
+    png_image::draw_points(points, BLUE, img);
 }
 
 
 fn draw_visited(visited: Vec<search::map::Position>, img: &mut png::Image) {
-    image::draw_points(visited, GRAY, img)
+    png_image::draw_points(visited, GRAY, img)
 }
 
 fn draw_path(path: search::Path, img: &mut png::Image) {
-    image::draw_points(path.fields, WHITE, img)
+    png_image::draw_points(path.fields, WHITE, img)
 }
 
 fn draw_start(start: Vec<search::map::Position>, img: &mut png::Image) {
-    image::draw_points(start, GREEN, img)
+    png_image::draw_points(start, GREEN, img)
 }
 
 fn draw_goals(goals: Vec<search::map::Position>, img: &mut png::Image) {
-    image::draw_points(goals, RED, img)
+    png_image::draw_points(goals, RED, img)
 }
 
 pub fn write_image(img: &mut png::Image, dst: &str) {

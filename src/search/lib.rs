@@ -6,7 +6,7 @@ use std::collections::{BinaryHeap, HashMap, HashSet};
 use std::hash::{Hash, Hasher};
 use std::num::Float;
 
-pub mod image;
+pub mod png_image;
 pub mod map;
 
 struct SearchMap {
