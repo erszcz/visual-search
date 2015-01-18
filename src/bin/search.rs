@@ -1,3 +1,4 @@
+#![allow(unstable)]
 #![feature(plugin)]
 extern crate "rustc-serialize" as rustc_serialize;
 extern crate docopt;
@@ -6,7 +7,7 @@ extern crate png;
 
 extern crate search;
 
-use search::map::{self, Field, Map};
+use search::map;
 use std::io;
 
 macro_rules! errorln {
@@ -29,7 +30,7 @@ Options:
 
 fn main() {
     let cmdline: Args = Args::docopt().decode().unwrap_or_else(|e| e.exit());
-    let mut img = png::load_png(&Path::new(cmdline.arg_src)).unwrap();
+    let img = png::load_png(&Path::new(cmdline.arg_src)).unwrap();
     let map = map::from_png(&img);
     let start = map.start();
     let goals = map.goals();

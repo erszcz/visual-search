@@ -1,5 +1,3 @@
-use png::Image;
-use png::PixelsByColorType::{K8, KA8, RGB8, RGBA8};
 use std::ops::Index;
 
 pub use self::png::map_from_png as from_png;
@@ -15,7 +13,7 @@ pub struct Map {
     pub fields: Vec<Field>
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub enum Field {
     Start,
     Goal,
@@ -48,6 +46,7 @@ impl Map {
 
 }
 
+#[derive(Copy)]
 pub struct MapPositions { x: usize, y: usize, width: usize, size: usize }
 
 impl Iterator for MapPositions {

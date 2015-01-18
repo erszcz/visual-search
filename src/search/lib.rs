@@ -1,9 +1,9 @@
+#![allow(unstable)]
 #[macro_use] extern crate log;
 extern crate png;
 
 use map::{ Map, Position };
 use std::collections::{ BinaryHeap, HashMap, HashSet };
-use std::hash::{ Hash, Hasher };
 use std::num::Float;
 
 pub mod map;
@@ -32,6 +32,7 @@ impl SearchMap {
 
 pub type Path = Vec<Position>;
 
+#[derive(Copy)]
 pub enum WorldShape {
     Rectangle,
     //Torus
@@ -141,11 +142,11 @@ fn test_move_in_rectangle() {
 }
 
 #[derive(Show)]
-pub enum Error {
+enum Error {
     GoalUnreachable
 }
 
-pub type Result = std::result::Result<Search, Error>;
+pub type SearchResult = std::result::Result<Search, Error>;
 
 pub struct Search {
     start: Vec<Position>,
@@ -160,7 +161,7 @@ fn distance((x1,y1): Position, (x2,y2): Position) -> isize {
 }
 
 pub fn bfs(start: Vec<Position>, vgoals: Vec<Position>,
-           initial_map: &map::Map, world_shape: WorldShape) -> Result {
+           initial_map: &map::Map, world_shape: WorldShape) -> SearchResult {
     let map = &SearchMap::from_map(initial_map);
     assert_eq!(1, start.len());
     assert_eq!(1, vgoals.len());
@@ -199,11 +200,10 @@ pub fn bfs(start: Vec<Position>, vgoals: Vec<Position>,
             }
         }
     }
-    Err (Error::GoalUnreachable)
 }
 
 pub fn greedy(start: Vec<Position>, vgoals: Vec<Position>,
-              initial_map: &map::Map, world_shape: WorldShape) -> Result {
+              initial_map: &map::Map, world_shape: WorldShape) -> SearchResult {
     let map = &SearchMap::from_map(initial_map);
     assert_eq!(1, start.len());
     assert_eq!(1, vgoals.len());
@@ -247,8 +247,9 @@ pub fn greedy(start: Vec<Position>, vgoals: Vec<Position>,
     Err (Error::GoalUnreachable)
 }
 
+#[allow(unused_parens)]
 pub fn astar(start: Vec<Position>, vgoals: Vec<Position>,
-             initial_map: &map::Map, world_shape: WorldShape) -> Result {
+             initial_map: &map::Map, world_shape: WorldShape) -> SearchResult {
     let map = &SearchMap::from_map(initial_map);
     assert_eq!(1, start.len());
     assert_eq!(1, vgoals.len());

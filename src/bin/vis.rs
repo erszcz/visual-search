@@ -1,3 +1,5 @@
+#![allow(unstable)]
+
 extern crate shader_version;
 extern crate input;
 extern crate event;
@@ -40,9 +42,9 @@ fn main() {
             samples: 0
         }
     );
-    let mut image = image::ImageBuffer::new(width, height);
+    let image = image::ImageBuffer::new(width, height);
     let mut frame = 0;
-    let mut texture = Texture::from_image(&image);
+    let texture = Texture::from_image(&image);
     let ref mut gl = Gl::new(opengl);
     let window = RefCell::new(window);
     for e in event::events(&window) {

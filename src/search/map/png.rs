@@ -1,9 +1,8 @@
 extern crate png;
 
 use png::Image;
-use png::PixelsByColorType::{ K8, KA8, RGB8, RGBA8 };
+use png::PixelsByColorType::{ RGB8, RGBA8 };
 use super::{ Field, Map, Position };
-use super::super::Path as SearchPath;
 use std::iter::repeat;
 
 pub type ColorRGB8 = (u8,u8,u8);
@@ -21,7 +20,7 @@ pub fn map_from_png(img: &Image) -> Map {
                                              img.height as usize, 3),
         RGBA8(ref pixels) => pixels_to_fields(pixels, img.width as usize,
                                               img.height as usize, 4),
-        _ => panic!("only RGB8 mode is supported")
+        _ => panic!("only RGB8 and RGBA8 modes are supported")
     };
     Map { width: img.width as usize,
           height: img.height as usize,
@@ -73,21 +72,19 @@ pub fn draw_points(points: &Vec<Position>, color: ColorRGB8,
 
 fn putpixel(pos: (usize,usize), color: ColorRGB8, img: &mut Image) {
     let pixel_width: u8 = match img.pixels {
-        K8(_) => 1,
-        KA8(_) => 2,
         RGB8(_) => 3,
-        RGBA8(_) => 4
+        RGBA8(_) => 4,
+        _ => panic!("only RGB8 and RGBA8 modes are supported")
     };
     match img.pixels {
-          K8(ref mut pixels)
-        | KA8(ref mut pixels)
-        | RGB8(ref mut pixels)
-        | RGBA8(ref mut pixels) => {
-            for i in range(0, pixel_width) {
+        RGB8(ref mut pixels) |
+        RGBA8(ref mut pixels) => {
+            for i in (0 .. pixel_width) {
                 pixels[index(pos, img.width as usize, pixel_width) + i as usize] =
                     color_by_width(color, pixel_width, i)
             }
         }
+        _ => panic!("only RGB8 and RGBA8 modes are supported")
     }
 }
 
