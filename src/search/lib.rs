@@ -192,9 +192,7 @@ pub fn bfs(start: Vec<Position>, vgoals: Vec<Position>,
                 Some (new_pos) =>
                     if !map.is_allowed(new_pos) { None }
                     else { Some ((distance(new_pos, vgoals[0]), new_pos)) }
-            })
-            .filter(|new_pos| new_pos.is_some()).map(|new_pos| new_pos.unwrap())
-            .collect();
+            }).filter_map(|new_pos| new_pos).collect();
         let heap = BinaryHeap::from_vec(rated_moves);
         let sorted_moves = heap.into_sorted_vec();
         for &(_, new_pos) in sorted_moves.iter() {
@@ -241,9 +239,7 @@ pub fn greedy(start: Vec<Position>, vgoals: Vec<Position>,
                 Some (new_pos) =>
                     if !map.is_allowed(new_pos) { None }
                     else { Some ((- distance(new_pos, vgoals[0]), new_pos)) }
-            })
-            .filter(|new_pos| new_pos.is_some()).map(|new_pos| new_pos.unwrap())
-            .collect();
+            }).filter_map(|new_pos| new_pos).collect();
         for &(cost, new_pos) in moves.iter() {
             if !visited.contains(&new_pos) {
                 pq.push((cost, new_pos));
@@ -288,11 +284,10 @@ pub fn astar(start: Vec<Position>, vgoals: Vec<Position>,
         }
         let moves: Vec<Position> = Direction::iter()
             .map(|d| mv(pos, d, map))
-            .filter(|maybe_new_pos| match *maybe_new_pos {
-                None => false,
-                Some (new_pos) => map.is_allowed(new_pos)
-            }).map(|new_pos| new_pos.unwrap())
-            .collect();
+            .filter_map(|maybe_new_pos| match maybe_new_pos {
+                Some (new_pos) if map.is_allowed(new_pos) => Some (new_pos),
+                _ => None
+            }).collect();
         for new_pos in moves.iter() {
             let tentative_g_score = g_score[pos] + 1;
             if (!visited.contains(new_pos)
