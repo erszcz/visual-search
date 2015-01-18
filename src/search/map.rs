@@ -76,14 +76,14 @@ impl Index<Position> for Map {
 #[test]
 fn test_map_positions() {
     let m1 = Map { width: 1, height: 1, fields: vec![] };
-    assert_eq!(vec![(0,0)], m1.positions().collect());
+    assert_eq!(vec![(0,0)], m1.positions().collect::<Vec<Position>>());
     let m2 = Map { width: 3, height: 2, fields: vec![] };
     assert_eq!(vec![(0,0),(1,0),(2,0),
-                    (0,1),(1,1),(2,1)], m2.positions().collect());
+                    (0,1),(1,1),(2,1)], m2.positions().collect::<Vec<Position>>());
     let m3 = Map { width: 2, height: 3, fields: vec![] };
     assert_eq!(vec![(0,0),(1,0),
                     (0,1),(1,1),
-                    (0,2),(1,2)], m3.positions().collect());
+                    (0,2),(1,2)], m3.positions().collect::<Vec<Position>>());
 }
 
 #[inline]
