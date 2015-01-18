@@ -26,8 +26,8 @@ impl FrameCounter {
     #[inline]
     fn update_with_now(&mut self, now_ns: u64) -> FrameUpdate {
         let elapsed_ns = now_ns - self.last_ns;
-        self.last_ns = now_ns;
         if elapsed_ns > self.frame_len_ns {
+            self.last_ns = now_ns - now_ns % self.frame_len_ns;
             FrameUpdate::NewFrame {
                 elapsed_ns: elapsed_ns,
                 skipped_frames: elapsed_ns / self.frame_len_ns
@@ -82,4 +82,13 @@ fn with_fps_after_some_ms(fps: u32, elapsed_ns: u64, expected: FrameUpdate) {
     let mut fc = FrameCounter::from_fps_and_last(fps, 0);
     let new_frame = fc.update_with_now(elapsed_ns);
     assert_eq!(expected, new_frame);
+}
+
+#[test]
+fn with_old_frame_update_status_last_time_is_not_updated() {
+    let fake_now_ns = 0;
+    let mut fc = FrameCounter::from_fps_and_last(25, fake_now_ns);
+    let new_frame = fc.update_with_now(39 * 1000 * 1000);
+    assert_eq!(FrameUpdate::OldFrame, new_frame);
+    assert_eq!(fake_now_ns, fc.last_ns);
 }
