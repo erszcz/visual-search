@@ -39,6 +39,9 @@ git = "https://github.com/pistondevelopers/graphics"
 [dependencies.pistoncore-input]
 git = "https://github.com/pistondevelopers/input"
 
+[dependencies.clock_ticks]
+git = "https://github.com/tomaka/clock_ticks"
+
 [lib]
 name = "search"
 path = "src/search/lib.rs"

@@ -2,6 +2,7 @@
 name = "search"
 version = "0.0.1"
 dependencies = [
+ "clock_ticks 0.0.2-pre (git+https://github.com/tomaka/clock_ticks)",
  "docopt 0.6.30 (git+git://github.com/docopt/docopt.rs)",
  "docopt_macros 0.6.30 (git+git://github.com/docopt/docopt.rs)",
  "image 0.2.0-alpha.4 (git+https://github.com/pistondevelopers/image)",
@@ -15,6 +16,11 @@ dependencies = [
  "rustc-serialize 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "shader_version 0.0.0 (git+https://github.com/pistondevelopers/shader_version)",
 ]
+
+[[package]]
+name = "clock_ticks"
+version = "0.0.2-pre"
+source = "git+https://github.com/tomaka/clock_ticks#602bd09dedab50c56413a0c70ced9c50e6184b65"
 
 [[package]]
 name = "docopt"
