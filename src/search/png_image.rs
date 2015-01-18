@@ -17,22 +17,46 @@ pub fn draw_points(points: Vec<(usize,usize)>, color: ColorRGB8,
         { putpixel(*point, color, img) }
 }
 
-fn putpixel(pos: (usize,usize), (r,g,b): ColorRGB8, img: &mut png::Image) {
-    let w = img.width as usize;
+fn putpixel(pos: (usize,usize), color: ColorRGB8, img: &mut png::Image) {
+    let pixel_width: u8 = match img.pixels {
+        K8(_) => 1,
+        KA8(_) => 2,
+        RGB8(_) => 3,
+        RGBA8(_) => 4
+    };
     match img.pixels {
-        K8(ref mut pixels) => pixels[index(pos, w, 1)] = (r+g+b) / 3,
-        KA8(ref mut pixels) => { pixels[index(pos, w, 2)    ] = (r+g+b) / 3;
-                                 pixels[index(pos, w, 2) + 1] = 255u8 },
-        RGB8(ref mut pixels) => { pixels[index(pos, w, 3)    ] = r;
-                                  pixels[index(pos, w, 3) + 1] = g;
-                                  pixels[index(pos, w, 3) + 2] = b },
-        RGBA8(ref mut pixels) => { pixels[index(pos, w, 4)    ] = r;
-                                   pixels[index(pos, w, 4) + 1] = g;
-                                   pixels[index(pos, w, 4) + 2] = b;
-                                   pixels[index(pos, w, 4) + 3] = 255u8 }
+          K8(ref mut pixels)
+        | KA8(ref mut pixels)
+        | RGB8(ref mut pixels)
+        | RGBA8(ref mut pixels) => {
+            for i in range(0, pixel_width) {
+                pixels[index(pos, img.width as usize, pixel_width) + i as usize] =
+                    color_by_width(color, pixel_width, i)
+            }
+        }
     }
 }
 
-fn index((x,y): (usize,usize), width: usize, bytes_per_color: usize) -> usize {
-    y * width * bytes_per_color + x * bytes_per_color
+fn color_by_width((r,g,b): ColorRGB8, pixel_width: u8, channel_index: u8) -> u8 {
+    match (pixel_width, channel_index) {
+        // grayscale
+        (1, _) => (r+g+b) / 3,
+        // grayscale with alpha channel
+        (2, 0) => (r+g+b) / 3,
+        (2, 1) => 255u8,
+        // RGB
+        (3, 0) => r,
+        (3, 1) => g,
+        (3, 2) => b,
+        // RGB with alpha channel
+        (4, 0) => r,
+        (4, 1) => g,
+        (4, 2) => b,
+        (4, 3) => 255u8,
+        (_, _) => panic!("invalid pixel_width / channel_index combination")
+    }
+}
+
+fn index((x,y): (usize,usize), width: usize, bytes_per_color: u8) -> usize {
+    y * width * bytes_per_color as usize + x * bytes_per_color as usize
 }
