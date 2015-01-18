@@ -46,6 +46,6 @@ fn main() {
     };
     match search_result {
         Err (e) => errorln!("error: {:?}", e),
-        Ok (search) => search::save(&map, &search, cmdline.arg_dst)
+        Ok (search) => search::save(&map, &search, cmdline.arg_dst).unwrap()
     }
 }

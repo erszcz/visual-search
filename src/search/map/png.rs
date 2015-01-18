@@ -115,32 +115,6 @@ fn index((x,y): (usize,usize), width: usize, bytes_per_color: u8) -> usize {
     y * width * bytes_per_color as usize + x * bytes_per_color as usize
 }
 
-pub fn draw_map(map: &Map, img: &mut png::Image) {
-    let points: Vec<(uint,uint)> = map.positions()
-        .filter(|&(x,y)| match map[(x,y)] {
-            Field::Impassable => true,
-            _ => false
-        }).collect();
-    draw_points(&points, BLUE, img);
-}
-
-pub fn draw_visited(visited: &Vec<Position>, img: &mut png::Image) {
-    draw_points(visited, GRAY, img)
-}
-
-pub fn draw_path(path: SearchPath, img: &mut png::Image) {
-    draw_points(&path.fields, WHITE, img)
-}
-
-pub fn draw_start(start: &Vec<Position>, img: &mut png::Image) {
-    draw_points(start, GREEN, img)
-}
-
-pub fn draw_goals(goals: &Vec<Position>, img: &mut png::Image) {
-    draw_points(goals, RED, img)
-}
-
-pub fn write_image(img: &mut png::Image, dst: &str) {
-    let res = png::store_png(img, &Path::new(dst));
-    assert!(res.is_ok());
+pub fn write_image(img: &mut png::Image, dst: &str) -> Result<(), String> {
+    png::store_png(img, &Path::new(dst))
 }

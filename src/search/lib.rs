@@ -30,10 +30,7 @@ impl SearchMap {
     }
 }
 
-#[derive(Clone)]
-pub struct Path {
-    pub fields: Vec<Position>
-}
+pub type Path = Vec<Position>;
 
 pub enum WorldShape {
     Rectangle,
@@ -181,7 +178,7 @@ pub fn bfs(start: Vec<Position>, vgoals: Vec<Position>,
             let path = reconstruct_path(pos, &steps);
             return Ok (Search { start: start,
                                 goals: vgoals,
-                                paths: vec![Path { fields: path }],
+                                paths: vec![path],
                                 visited: visited.into_iter().collect() })
         }
         let rated_moves: Vec<(isize, Position)> = Direction::iter()
@@ -228,7 +225,7 @@ pub fn greedy(start: Vec<Position>, vgoals: Vec<Position>,
             let path = reconstruct_path(pos, &steps);
             return Ok (Search { start: start,
                                 goals: vgoals,
-                                paths: vec![Path { fields: path }],
+                                paths: vec![path],
                                 visited: visited.into_iter().collect() })
         }
         let moves: Vec<(isize, Position)> = Direction::iter()
@@ -278,7 +275,7 @@ pub fn astar(start: Vec<Position>, vgoals: Vec<Position>,
             let path = reconstruct_path(pos, &steps);
             return Ok (Search { start: start,
                                 goals: vgoals,
-                                paths: vec![Path { fields: path }],
+                                paths: vec![path],
                                 visited: visited.into_iter().collect() })
         }
         let moves: Vec<Position> = Direction::iter()
@@ -322,12 +319,13 @@ fn reconstruct_path(goal: Position, steps: &HashMap<Position, Position>)
     path
 }
 
-pub fn save(map: &Map, search: &Search, dest: String) {
+pub fn save(map: &Map, search: &Search, dest: String)
+    -> std::result::Result<(), String>
+{
     let mut img = map::to_png(map);
-    map::png::draw_visited(&search.visited, &mut img);
-    let path = search.paths[0].clone();
-    map::png::draw_path(path, &mut img);
-    map::png::draw_start(&search.start, &mut img);
-    map::png::draw_goals(&search.goals, &mut img);
-    map::png::write_image(&mut img, dest.as_slice());
+    map::png::draw_points(&search.visited, map::png::GRAY, &mut img);
+    map::png::draw_points(&search.paths[0], map::png::WHITE, &mut img);
+    map::png::draw_points(&search.start, map::png::GREEN, &mut img);
+    map::png::draw_points(&search.goals, map::png::RED, &mut img);
+    map::png::write_image(&mut img, dest.as_slice())
 }
