@@ -46,7 +46,7 @@ pub fn map_to_png(map: &Map) -> Image {
 fn pixels_to_fields(pixels: &Vec<u8>, width: usize, height: usize,
                     bytes_per_pixel: usize) -> Vec<Field> {
     let mut fields: Vec<Field> =
-        repeat(Field::Normal).take(width * height).collect();
+        repeat(Field::Passable).take(width * height).collect();
     for i in (0 .. width * height) {
         let j = i * bytes_per_pixel;
         let color: ColorRGB8 = (pixels[j], pixels[j+1], pixels[j+2]);
@@ -60,7 +60,7 @@ fn pixel_to_field((r,g,b): ColorRGB8) -> Field {
         RED => Field::Goal,
         GREEN => Field::Start,
         BLUE => Field::Impassable,
-        _ => Field::Normal
+        _ => Field::Passable
     }
 }
 

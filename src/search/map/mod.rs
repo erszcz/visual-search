@@ -17,7 +17,9 @@ pub struct Map {
 pub enum Field {
     Start,
     Goal,
-    Normal,
+    Path,
+    Current,
+    Passable,
     Impassable
 }
 
