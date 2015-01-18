@@ -27,6 +27,18 @@ git = "https://github.com/pistondevelopers/event"
 [dependencies.piston2d-opengl_graphics]
 git = "https://github.com/pistondevelopers/opengl_graphics"
 
+[dependencies.shader_version]
+git = "https://github.com/pistondevelopers/shader_version"
+
+[dependencies.image]
+git = "https://github.com/pistondevelopers/image"
+
+[dependencies.piston2d-graphics]
+git = "https://github.com/pistondevelopers/graphics"
+
+[dependencies.pistoncore-input]
+git = "https://github.com/pistondevelopers/input"
+
 [lib]
 name = "search"
 path = "src/search/lib.rs"
