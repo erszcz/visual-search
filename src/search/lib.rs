@@ -38,6 +38,7 @@ pub enum WorldShape {
     //Torus
 }
 
+#[derive(Copy, FromPrimitive)]
 enum Direction {
     N,
     NE,
@@ -51,25 +52,23 @@ enum Direction {
 
 impl Direction {
     fn iter() -> DirectionIter {
-        DirectionIter { dir: Direction::N }
+        DirectionIter { dir: Some (Direction::N) }
     }
 }
 
-struct DirectionIter { dir: Direction }
+struct DirectionIter { dir: Option<Direction> }
 
 impl Iterator for DirectionIter {
     type Item = Direction;
 
     fn next(&mut self) -> Option<Direction> {
         match self.dir {
-            Direction::N  => { self.dir = Direction::NE; Some (Direction::NE) },
-            Direction::NE => { self.dir = Direction::E;  Some (Direction::E)  },
-            Direction::E  => { self.dir = Direction::SE; Some (Direction::SE) },
-            Direction::SE => { self.dir = Direction::S;  Some (Direction::S)  },
-            Direction::S  => { self.dir = Direction::SW; Some (Direction::SW) },
-            Direction::SW => { self.dir = Direction::W;  Some (Direction::W)  },
-            Direction::W  => { self.dir = Direction::NW; Some (Direction::NW) }
-            Direction::NW => None
+            None => None,
+            Some (dir) => {
+                let this = self.dir;
+                self.dir = std::num::FromPrimitive::from_u8(dir as u8 + 1);
+                this
+            }
         }
     }
 }
