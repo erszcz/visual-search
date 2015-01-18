@@ -2,11 +2,10 @@
 extern crate "rustc-serialize" as rustc_serialize;
 extern crate docopt;
 #[plugin] #[no_link] extern crate docopt_macros;
-
 extern crate png;
+
 extern crate search;
 
-use search::png_image::{self, BLUE, GRAY, GREEN, RED, WHITE};
 use search::map::{self, Field, Map};
 use std::io;
 
@@ -47,45 +46,6 @@ fn main() {
     };
     match search_result {
         Err (e) => errorln!("error: {:?}", e),
-        Ok (search) => {
-            draw_visited(search.visited, &mut img);
-            let path = search.paths[0].clone();
-            draw_path(path, &mut img);
-            draw_start(search.start, &mut img);
-            draw_goals(search.goals, &mut img);
-            draw_map(&map, &mut img);
-            write_image(&mut img, cmdline.arg_dst.as_slice());
-        }
+        Ok (search) => search::save(&map, &search, cmdline.arg_dst)
     }
-}
-
-fn draw_map(map: &Map, img: &mut png::Image) {
-    let points: Vec<(uint,uint)> = map.positions()
-        .filter(|&(x,y)| match map[(x,y)] {
-            Field::Impassable => true,
-            _ => false
-        }).collect();
-    png_image::draw_points(points, BLUE, img);
-}
-
-
-fn draw_visited(visited: Vec<search::map::Position>, img: &mut png::Image) {
-    png_image::draw_points(visited, GRAY, img)
-}
-
-fn draw_path(path: search::Path, img: &mut png::Image) {
-    png_image::draw_points(path.fields, WHITE, img)
-}
-
-fn draw_start(start: Vec<search::map::Position>, img: &mut png::Image) {
-    png_image::draw_points(start, GREEN, img)
-}
-
-fn draw_goals(goals: Vec<search::map::Position>, img: &mut png::Image) {
-    png_image::draw_points(goals, RED, img)
-}
-
-pub fn write_image(img: &mut png::Image, dst: &str) {
-    let res = png::store_png(img, &Path::new(dst));
-    assert!(res.is_ok());
 }

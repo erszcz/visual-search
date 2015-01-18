@@ -1,12 +1,11 @@
 #[macro_use] extern crate log;
 extern crate png;
 
-use map::Position;
-use std::collections::{BinaryHeap, HashMap, HashSet};
-use std::hash::{Hash, Hasher};
+use map::{ Map, Position };
+use std::collections::{ BinaryHeap, HashMap, HashSet };
+use std::hash::{ Hash, Hasher };
 use std::num::Float;
 
-pub mod png_image;
 pub mod map;
 
 struct SearchMap {
@@ -152,10 +151,10 @@ pub enum Error {
 pub type Result = std::result::Result<Search, Error>;
 
 pub struct Search {
-    pub start: Vec<Position>,
-    pub goals: Vec<Position>,
-    pub paths: Vec<Path>,
-    pub visited: Vec<Position>
+    start: Vec<Position>,
+    goals: Vec<Position>,
+    paths: Vec<Path>,
+    visited: Vec<Position>
 }
 
 fn distance((x1,y1): Position, (x2,y2): Position) -> isize {
@@ -321,4 +320,14 @@ fn reconstruct_path(goal: Position, steps: &HashMap<Position, Position>)
         }
     }
     path
+}
+
+pub fn save(map: &Map, search: &Search, dest: String) {
+    let mut img = map::to_png(map);
+    map::png::draw_visited(&search.visited, &mut img);
+    let path = search.paths[0].clone();
+    map::png::draw_path(path, &mut img);
+    map::png::draw_start(&search.start, &mut img);
+    map::png::draw_goals(&search.goals, &mut img);
+    map::png::write_image(&mut img, dest.as_slice());
 }
