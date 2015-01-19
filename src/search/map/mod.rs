@@ -1,8 +1,10 @@
 use std::ops::Index;
 
+pub use self::image_buffer::map_to_image_buffer as to_image_buffer;
 pub use self::png::map_from_png as from_png;
 pub use self::png::map_to_png as to_png;
 
+pub mod image_buffer;
 pub mod png;
 
 pub type Position = (usize, usize);
@@ -20,7 +22,9 @@ pub enum Field {
     Path,
     Current,
     Passable,
-    Impassable
+    Impassable,
+    Visited,
+    Frontier
 }
 
 impl Map {
