@@ -37,13 +37,16 @@ fn main() {
     let search_result = match cmdline.flag_m.as_slice() {
         "greedy" =>
             search::greedy(start.clone(), goals.clone(), &map,
-                           search::WorldShape::Rectangle),
+                           search::WorldShape::Rectangle{ width: map.width,
+                                                          height: map.height }),
         "astar" =>
             search::astar(start.clone(), goals.clone(), &map,
-                          search::WorldShape::Rectangle),
+                          search::WorldShape::Rectangle{ width: map.width,
+                                                         height: map.height }),
         "bfs" | _ =>
             search::bfs(start.clone(), goals.clone(), &map,
-                        search::WorldShape::Rectangle)
+                        search::WorldShape::Rectangle{ width: map.width,
+                                                       height: map.height })
     };
     match search_result {
         Err (e) => errorln!("error: {:?}", e),
