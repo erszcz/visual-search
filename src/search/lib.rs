@@ -5,12 +5,12 @@ extern crate png;
 use map::{ Map, Position };
 use std::collections::{ BinaryHeap, HashMap, HashSet };
 use std::num::Float;
-use std::ops::Add;
+use std::ops::{ Add, Index, IndexMut };
 
 pub mod map;
 
 // TODO: integrate with map::Map
-struct SearchMap {
+pub struct SearchMap {
     width: usize,
     height: usize,
     fields: Vec<map::Field>
@@ -30,7 +30,32 @@ impl SearchMap {
                     // TODO: introduce SearchField, convert fields to SearchFields
                     fields: map.fields.clone() }
     }
+
+    pub fn to_map(&self) -> map::Map {
+        Map { width: self.width,
+              height: self.height,
+              fields: self.fields.clone() }
+    }
 }
+
+impl Index<Position> for SearchMap {
+    type Output = map::Field;
+
+    fn index<'a>(&'a self, pos: &Position) -> &'a map::Field {
+        &self.fields[index(*pos, self.width)]
+    }
+}
+
+impl IndexMut<Position> for SearchMap {
+    type Output = map::Field;
+
+    fn index_mut<'a>(&'a mut self, pos: &Position) -> &'a mut map::Field {
+        &mut self.fields[index(*pos, self.width)]
+    }
+}
+
+#[inline]
+pub fn index((x,y): (usize,usize), width: usize) -> usize { y * width + x }
 
 pub type Path = Vec<Position>;
 
@@ -338,6 +363,77 @@ pub struct Search {
 fn distance((x1,y1): Position, (x2,y2): Position) -> isize {
     let (fx1, fy1, fx2, fy2) = (x1 as f64, y1 as f64, x2 as f64, y2 as f64);
     ( (fx2-fx1) * (fx2-fx1) + (fy2-fy1) * (fy2-fy1) ).sqrt() as isize
+}
+
+pub struct BFSState {
+    pub map: SearchMap,
+    q: Vec<Position>,
+
+    // TODO: these two items can be read from/written to the map itself
+    goal: Position,
+    visited: HashSet<Position>,
+
+    steps: HashMap<Position, Position>,
+    shape: WorldShape,
+
+    previous: Option<Position>,
+    result: Option<Result<Path, Error>>
+}
+
+// TODO: conforms to bfs interface, but BFSState is actually different
+pub fn bfs2(start: Vec<Position>,
+            goals: Vec<Position>,
+            map: &map::Map,
+            shape: WorldShape) -> BFSState {
+    BFSState { q: start.clone(),
+               goal: goals[0],
+               visited: vec_to_set(start),
+               map: SearchMap::from_map(map),
+               shape: shape,
+               steps: HashMap::new(),
+               previous: None,
+               result: None }
+}
+
+impl<'b> Iterator for BFSState {
+    type Item = &'b BFSState;
+
+    fn next(&mut self) -> Option<&BFSState> {
+        if self.result.is_some()
+            { return None }
+        if let Some (previous) = self.previous
+            { self.map[previous] = map::Field::Visited; }
+        let pos = self.q.remove(0);
+        debug!("visited: {:?}", self.visited);
+        debug!("current: {:?}", pos);
+        debug!("steps  : {:?}", self.steps);
+        if self.goal == pos {
+            let path = reconstruct_path(pos, &self.steps);
+            for &pos in path.iter() {
+                self.map[pos] = map::Field::Path;
+            }
+            self.result = Some (Ok (path));
+            return None
+        }
+        let rated_moves: Vec<(isize, Position)> = moves(pos, self.shape).iter()
+            .map(|new_pos| {
+                if !self.map.is_allowed(*new_pos) { None }
+                else { Some ((distance(*new_pos, self.goal), *new_pos)) }
+            }).filter_map(|new_pos| new_pos).collect();
+        let heap = BinaryHeap::from_vec(rated_moves);
+        let sorted_moves = heap.into_sorted_vec();
+        for &(_, new_pos) in sorted_moves.iter() {
+            if !self.visited.contains(&new_pos) {
+                self.q.push(new_pos);
+                self.visited.insert(new_pos);
+                self.map[new_pos] = map::Field::Frontier;
+                self.steps.insert(new_pos, pos);
+            }
+        }
+        self.previous = Some (self.q[0]);
+        self.map[self.q[0]] = map::Field::Current;
+        Some (self)
+    }
 }
 
 pub fn bfs(start: Vec<Position>, vgoals: Vec<Position>,

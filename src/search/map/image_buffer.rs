@@ -4,10 +4,13 @@ use super::{ Field, Map };
 
 pub type Image = image::ImageBuffer<Vec<u8>, u8, image::Rgba<u8>>;
 
-pub fn map_to_image_buffer(map: &Map) -> Image {
-    image::ImageBuffer::from_fn(map.width as u32, map.height as u32,
+pub fn map_to_image_buffer(map: &Map, scale_factor: usize) -> Image {
+    let w = (map.width * scale_factor) as u32;
+    let h = (map.height * scale_factor) as u32;
+    image::ImageBuffer::from_fn(w, h,
                                 Box::new(|x, y| {
-                                    let pos = (x as usize, y as usize);
+                                    let pos = ((x / scale_factor as u32) as usize,
+                                               (y / scale_factor as u32) as usize);
                                     let pixel = field_to_pixel(map[pos]);
                                     image::Rgba (pixel)
                                 }))

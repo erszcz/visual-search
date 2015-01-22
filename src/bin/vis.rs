@@ -30,10 +30,18 @@ macro_rules! errorln {
 mod frame_counter;
 
 fn main() {
-    let img = png::load_png(&Path::new("test/map5.png")).unwrap();
+    let img = png::load_png(&Path::new("test/map2.png")).unwrap();
     let map = map::from_png(&img);
-    let image = map::to_image_buffer(&map);
-    let mut fc = FrameCounter::from_fps(25);
+
+    let scale_factor = 3;
+    let mut image = map::to_image_buffer(&map, scale_factor);
+    let start = map.start();
+    let goals = map.goals();
+    let shape = search::WorldShape::Rectangle{ width: map.width,
+                                               height: map.height };
+    let mut search = search::bfs2(start, goals, &map, shape);
+
+    let mut fc = FrameCounter::from_fps(20);
     let opengl = shader_version::OpenGL::_3_2;
     let (width, height) = image.dimensions();
     let window = Sdl2Window::new(
@@ -47,16 +55,20 @@ fn main() {
             samples: 0
         }
     );
-    let texture = Texture::from_image(&image);
+    let mut texture = Texture::from_image(&image);
     let ref mut gl = Gl::new(opengl);
     let window = RefCell::new(window);
+    let mut counter = 0;
     for e in event::events(&window) {
         use event::{ RenderEvent };
         if let Some(args) = e.render_args() {
             if let FrameUpdate::NewFrame{skipped_frames, ..} = fc.update() {
                 errorln!("new frame: skipped={:?}", skipped_frames);
+                search.next();
                 gl.draw([0, 0, args.width as i32, args.height as i32], |c, gl| {
                     graphics::clear([0.0; 4], gl);
+                    image = map::to_image_buffer(&search.map.to_map(), scale_factor);
+                    texture = Texture::from_image(&image);
                     graphics::image(&texture, &c, gl);
                 });
             }
