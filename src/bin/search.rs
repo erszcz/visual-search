@@ -20,11 +20,12 @@ macro_rules! errorln {
 }
 
 docopt!{Args derive Show, "
-Usage: search [-m METHOD] <src> <dst>
+Usage: search [-m METHOD] [-w WORLD] <src> <dst>
        search --help
 
 Options:
   -m METHOD         Search method: bfs, greedy or astar.
+  -w WORLD          World to search in: torus or rectangle.
   -h, --help        Show this message.
 "}
 
@@ -34,19 +35,19 @@ fn main() {
     let map = map::from_png(&img);
     let start = map.start();
     let goals = map.goals();
+    let world_shape = match cmdline.flag_w.as_slice() {
+        "torus" =>
+            search::WorldShape::Torus{ width: map.width, height: map.height },
+        "rectangle" | _ =>
+            search::WorldShape::Rectangle{ width: map.width, height: map.height },
+    };
     let search_result = match cmdline.flag_m.as_slice() {
         "greedy" =>
-            search::greedy(start.clone(), goals.clone(), &map,
-                           search::WorldShape::Rectangle{ width: map.width,
-                                                          height: map.height }),
+            search::greedy(start.clone(), goals.clone(), &map, world_shape),
         "astar" =>
-            search::astar(start.clone(), goals.clone(), &map,
-                          search::WorldShape::Rectangle{ width: map.width,
-                                                         height: map.height }),
+            search::astar(start.clone(), goals.clone(), &map, world_shape),
         "bfs" | _ =>
-            search::bfs(start.clone(), goals.clone(), &map,
-                        search::WorldShape::Rectangle{ width: map.width,
-                                                       height: map.height })
+            search::bfs(start.clone(), goals.clone(), &map, world_shape)
     };
     match search_result {
         Err (e) => errorln!("error: {:?}", e),
