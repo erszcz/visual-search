@@ -1,6 +1,10 @@
 #![allow(unstable)]
+#![feature(plugin)]
+#[plugin] #[no_link] extern crate docopt_macros;
 
+extern crate "rustc-serialize" as rustc_serialize;
 extern crate clock_ticks;
+extern crate docopt;
 extern crate event;
 extern crate graphics;
 extern crate image;
@@ -29,15 +33,34 @@ macro_rules! errorln {
 
 mod frame_counter;
 
+docopt!{Args derive Show, "
+Usage: vis [-m METHOD] [-w WORLD] <map>
+       vis --help
+
+Options:
+  -m METHOD         Search method: bfs, greedy or astar.
+  -w WORLD          World to search in: torus or rectangle.
+  -h, --help        Show this message.
+"}
+
 fn main() {
-    let img = png::load_png(&Path::new("test/map2.png")).unwrap();
+    let cmdline: Args = Args::docopt().decode().unwrap_or_else(|e| e.exit());
+
+    let img = png::load_png(&Path::new(cmdline.arg_map)).unwrap();
     let map = map::from_png(&img);
+    let shape = match cmdline.flag_w.as_slice() {
+        "torus" =>
+            search::WorldShape::Torus{ width: map.width, height: map.height },
+        "rectangle" | _ =>
+            search::WorldShape::Rectangle{ width: map.width, height: map.height },
+    };
+    let search_method = match cmdline.flag_m.as_slice() {
+        _ => search::bfs2 as fn(&search::map::Map, search::WorldShape) -> search::BFSState
+    };
 
     let scale_factor = 3;
     let mut image = map::to_image_buffer(&map, scale_factor);
-    let shape = search::WorldShape::Rectangle{ width: map.width,
-                                               height: map.height };
-    let mut search = search::bfs2(&map, shape);
+    let mut search = search_method(&map, shape);
 
     let mut fc = FrameCounter::from_fps(20);
     let opengl = shader_version::OpenGL::_3_2;
