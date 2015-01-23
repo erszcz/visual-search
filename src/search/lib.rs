@@ -360,10 +360,25 @@ pub struct Search {
     visited: Vec<Position>
 }
 
-fn distance((x1,y1): Position, (x2,y2): Position) -> isize {
+fn distance((x1,y1): Position, (x2,y2): Position, shape: WorldShape) -> isize {
     let (fx1, fy1, fx2, fy2) = (x1 as f64, y1 as f64, x2 as f64, y2 as f64);
-    ( (fx2-fx1) * (fx2-fx1) + (fy2-fy1) * (fy2-fy1) ).sqrt() as isize
+    match shape {
+        WorldShape::Rectangle {..} => {
+            let dx = fx2 - fx1;
+            let dy = fy2 - fy1;
+            (dx * dx + dy * dy).sqrt().round() as isize
+        }
+        WorldShape::Torus {width, height} => {
+            let (w, h) = (width as f64, height as f64);
+            // sqrt(min(|x1 - x2|, w - |x1 - x2|)^2 + min(|y1 - y2|, h - |y1-y2|)^2)
+            let minx = min((fx1 - fx2).abs(), w - (fx1 - fx2).abs());
+            let miny = min((fy1 - fy2).abs(), h - (fy1 - fy2).abs());
+            (minx * minx + miny * miny).sqrt().round() as isize
+        }
+    }
 }
+
+fn min<T: PartialOrd>(a: T, b: T) -> T { if a < b { a } else { b } }
 
 pub struct BFSState {
     pub map: SearchMap,
@@ -416,7 +431,7 @@ impl<'b> Iterator for BFSState {
         let rated_moves: Vec<(isize, Position)> = moves(pos, self.shape).iter()
             .map(|new_pos| {
                 if !self.map.is_allowed(*new_pos) { None }
-                else { Some ((distance(*new_pos, self.goal), *new_pos)) }
+                else { Some ((distance(*new_pos, self.goal, self.shape), *new_pos)) }
             }).filter_map(|new_pos| new_pos).collect();
         let heap = BinaryHeap::from_vec(rated_moves);
         let sorted_moves = heap.into_sorted_vec();
@@ -458,7 +473,7 @@ pub fn bfs(start: Vec<Position>, vgoals: Vec<Position>,
         let rated_moves: Vec<(isize, Position)> = moves(pos, shape).iter()
             .map(|new_pos| {
                 if !map.is_allowed(*new_pos) { None }
-                else { Some ((distance(*new_pos, vgoals[0]), *new_pos)) }
+                else { Some ((distance(*new_pos, vgoals[0], shape), *new_pos)) }
             }).filter_map(|new_pos| new_pos).collect();
         let heap = BinaryHeap::from_vec(rated_moves);
         let sorted_moves = heap.into_sorted_vec();
@@ -478,7 +493,7 @@ pub fn greedy(start: Vec<Position>, vgoals: Vec<Position>,
     assert_eq!(1, start.len());
     assert_eq!(1, vgoals.len());
     let mut pq = BinaryHeap::new();
-    pq.push( ( - distance(start[0], vgoals[0]), start[0] ) );
+    pq.push( ( - distance(start[0], vgoals[0], shape), start[0] ) );
     let goals = vec_to_set(vgoals.clone());
     let mut visited = vec_to_set(start.clone());
     let mut steps = HashMap::new();
@@ -500,7 +515,7 @@ pub fn greedy(start: Vec<Position>, vgoals: Vec<Position>,
         let moves: Vec<(isize, Position)> = moves(pos, shape).iter()
             .map(|new_pos| {
                 if !map.is_allowed(*new_pos) { None }
-                else { Some ((- distance(*new_pos, vgoals[0]), *new_pos)) }
+                else { Some ((- distance(*new_pos, vgoals[0], shape), *new_pos)) }
             }).filter_map(|new_pos| new_pos).collect();
         for &(cost, new_pos) in moves.iter() {
             if !visited.contains(&new_pos) {
@@ -526,7 +541,7 @@ pub fn astar(start: Vec<Position>, vgoals: Vec<Position>,
     let start0 = start[0].clone();
     g_score.insert(start0, 0);
     let mut f_score = HashMap::new();
-    f_score.insert(start0, g_score[start0] + distance(start0, vgoals[0]));
+    f_score.insert(start0, g_score[start0] + distance(start0, vgoals[0], shape));
     let mut pq = BinaryHeap::new();
     pq.push( ( - f_score[start0], start0 ) );
     loop {
@@ -554,7 +569,9 @@ pub fn astar(start: Vec<Position>, vgoals: Vec<Position>,
                 || (g_score.contains_key(new_pos)
                     && tentative_g_score < g_score[*new_pos])) {
                 g_score.insert(*new_pos, tentative_g_score);
-                f_score.insert(*new_pos, tentative_g_score + distance(*new_pos, vgoals[0]));
+                f_score.insert
+                    (*new_pos, (tentative_g_score
+                                + distance(*new_pos, vgoals[0], shape)));
                 pq.push((- f_score[*new_pos], *new_pos));
                 visited.insert(*new_pos);
                 steps.insert(*new_pos, pos);
