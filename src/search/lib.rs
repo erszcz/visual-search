@@ -380,13 +380,11 @@ pub struct BFSState {
     result: Option<Result<Path, Error>>
 }
 
-// TODO: conforms to bfs interface, but BFSState is actually different
-pub fn bfs2(start: Vec<Position>,
-            goals: Vec<Position>,
-            map: &map::Map,
+pub fn bfs2(map: &map::Map,
             shape: WorldShape) -> BFSState {
+    let start = map.start();
     BFSState { q: start.clone(),
-               goal: goals[0],
+               goal: map.goals()[0],
                visited: vec_to_set(start),
                map: SearchMap::from_map(map),
                shape: shape,

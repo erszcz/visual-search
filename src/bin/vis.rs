@@ -35,11 +35,9 @@ fn main() {
 
     let scale_factor = 3;
     let mut image = map::to_image_buffer(&map, scale_factor);
-    let start = map.start();
-    let goals = map.goals();
     let shape = search::WorldShape::Rectangle{ width: map.width,
                                                height: map.height };
-    let mut search = search::bfs2(start, goals, &map, shape);
+    let mut search = search::bfs2(&map, shape);
 
     let mut fc = FrameCounter::from_fps(20);
     let opengl = shader_version::OpenGL::_3_2;
@@ -58,7 +56,6 @@ fn main() {
     let mut texture = Texture::from_image(&image);
     let ref mut gl = Gl::new(opengl);
     let window = RefCell::new(window);
-    let mut counter = 0;
     for e in event::events(&window) {
         use event::{ RenderEvent };
         if let Some(args) = e.render_args() {
