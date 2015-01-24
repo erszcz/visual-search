@@ -437,13 +437,17 @@ pub fn bfs(start: Vec<Position>, vgoals: Vec<Position>,
     Err (Error::GoalUnreachable)
 }
 
+fn appraise(pos: Position, goal: Position, shape: WorldShape) -> (isize, Position) {
+    ( -distance(pos, goal, shape), pos )
+}
+
 pub fn greedy(start: Vec<Position>, vgoals: Vec<Position>,
               map: &Map, shape: WorldShape) -> SearchResult {
     let map = map.clone();
     assert_eq!(1, start.len());
     assert_eq!(1, vgoals.len());
     let mut pq = BinaryHeap::new();
-    pq.push( ( - distance(start[0], vgoals[0], shape), start[0] ) );
+    pq.push( appraise(start[0], vgoals[0], shape) );
     let goals = vec_to_set(vgoals.clone());
     let mut visited = vec_to_set(start.clone());
     let mut steps = HashMap::new();
@@ -465,7 +469,7 @@ pub fn greedy(start: Vec<Position>, vgoals: Vec<Position>,
         let moves: Vec<(isize, Position)> = moves(pos, shape).iter()
             .map(|new_pos| {
                 if !map[*new_pos].is_passable() { None }
-                else { Some ((- distance(*new_pos, vgoals[0], shape), *new_pos)) }
+                else { Some (appraise(*new_pos, vgoals[0], shape)) }
             }).filter_map(|new_pos| new_pos).collect();
         for &(cost, new_pos) in moves.iter() {
             if !visited.contains(&new_pos) {
