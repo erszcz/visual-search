@@ -55,12 +55,12 @@ fn main() {
             search::WorldShape::Rectangle{ width: map.width, height: map.height },
     };
     let search_method = match cmdline.flag_m.as_slice() {
-        _ => search::bfs2 as fn(&search::map::Map, search::WorldShape) -> search::BFSState
+        _ => search::bfs2 as fn(search::map::Map, search::WorldShape) -> search::BFSState
     };
 
     let scale_factor = 3;
     let mut image = map::to_image_buffer(&map, scale_factor);
-    let mut search = search_method(&map, shape);
+    let mut search = search_method(map, shape);
 
     let mut fc = FrameCounter::from_fps(20);
     let opengl = shader_version::OpenGL::_3_2;
@@ -87,7 +87,7 @@ fn main() {
                 search.next();
                 gl.draw([0, 0, args.width as i32, args.height as i32], |c, gl| {
                     graphics::clear([0.0; 4], gl);
-                    image = map::to_image_buffer(&search.map.to_map(), scale_factor);
+                    image = map::to_image_buffer(&search.map, scale_factor);
                     texture = Texture::from_image(&image);
                     graphics::image(&texture, &c, gl);
                 });

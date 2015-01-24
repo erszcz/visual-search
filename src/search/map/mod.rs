@@ -1,4 +1,4 @@
-use std::ops::Index;
+use std::ops::{ Index, IndexMut };
 
 pub use self::image_buffer::map_to_image_buffer as to_image_buffer;
 pub use self::png::map_from_png as from_png;
@@ -9,6 +9,7 @@ pub mod png;
 
 pub type Position = (usize, usize);
 
+#[derive(Clone)]
 pub struct Map {
     pub width: usize,
     pub height: usize,
@@ -25,6 +26,15 @@ pub enum Field {
     Impassable,
     Visited,
     Frontier
+}
+
+impl Field {
+    pub fn is_passable(&self) -> bool {
+        match self {
+            &Field::Impassable => false,
+            _ => true
+        }
+    }
 }
 
 impl Map {
@@ -78,6 +88,14 @@ impl Index<Position> for Map {
 
     fn index<'a>(&'a self, pos: &Position) -> &'a Field {
         &self.fields[index(*pos, self.width)]
+    }
+}
+
+impl IndexMut<Position> for Map {
+    type Output = Field;
+
+    fn index_mut<'a>(&'a mut self, pos: &Position) -> &'a mut Field {
+        &mut self.fields[index(*pos, self.width)]
     }
 }
 

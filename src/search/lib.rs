@@ -5,57 +5,9 @@ extern crate png;
 use map::{ Field, Map, Position };
 use std::collections::{ BinaryHeap, HashMap, HashSet };
 use std::num::Float;
-use std::ops::{ Add, Index, IndexMut };
+use std::ops::Add;
 
 pub mod map;
-
-// TODO: integrate with map::Map
-pub struct SearchMap {
-    width: usize,
-    height: usize,
-    fields: Vec<Field>
-}
-
-impl SearchMap {
-    fn is_allowed(&self, pos: Position) -> bool {
-        match self.fields[map::index(pos, self.width)] {
-            Field::Impassable => false,
-            _ => true
-        }
-    }
-
-    fn from_map(map: &map::Map) -> SearchMap {
-        SearchMap { width: map.width,
-                    height: map.height,
-                    // TODO: introduce SearchField, convert fields to SearchFields
-                    fields: map.fields.clone() }
-    }
-
-    pub fn to_map(&self) -> map::Map {
-        Map { width: self.width,
-              height: self.height,
-              fields: self.fields.clone() }
-    }
-}
-
-impl Index<Position> for SearchMap {
-    type Output = Field;
-
-    fn index<'a>(&'a self, pos: &Position) -> &'a Field {
-        &self.fields[index(*pos, self.width)]
-    }
-}
-
-impl IndexMut<Position> for SearchMap {
-    type Output = Field;
-
-    fn index_mut<'a>(&'a mut self, pos: &Position) -> &'a mut Field {
-        &mut self.fields[index(*pos, self.width)]
-    }
-}
-
-#[inline]
-pub fn index((x,y): (usize,usize), width: usize) -> usize { y * width + x }
 
 pub type Path = Vec<Position>;
 
@@ -381,7 +333,7 @@ fn distance((x1,y1): Position, (x2,y2): Position, shape: WorldShape) -> isize {
 fn min<T: PartialOrd>(a: T, b: T) -> T { if a < b { a } else { b } }
 
 pub struct BFSState {
-    pub map: SearchMap,
+    pub map: Map,
     q: Vec<Position>,
 
     // TODO: this item can be read from/written to the map itself
@@ -394,12 +346,11 @@ pub struct BFSState {
     result: Option<Result<Path, Error>>
 }
 
-pub fn bfs2(map: &map::Map,
-            shape: WorldShape) -> BFSState {
+pub fn bfs2(map: Map, shape: WorldShape) -> BFSState {
     let start = map.start();
     BFSState { q: start.clone(),
                visited: vec_to_set(start),
-               map: SearchMap::from_map(map),
+               map: map,
                shape: shape,
                steps: HashMap::new(),
                previous: None,
@@ -428,7 +379,7 @@ impl<'b> Iterator for BFSState {
         }
         let allowed_moves: Vec<Position> = moves(pos, self.shape).iter()
             .map(|new_pos| {
-                if !self.map.is_allowed(*new_pos) { None }
+                if !self.map[*new_pos].is_passable() { None }
                 else { Some (*new_pos) }
             }).filter_map(|new_pos| new_pos).collect();
         for &new_pos in allowed_moves.iter() {
@@ -446,8 +397,8 @@ impl<'b> Iterator for BFSState {
 }
 
 pub fn bfs(start: Vec<Position>, vgoals: Vec<Position>,
-           initial_map: &map::Map, shape: WorldShape) -> SearchResult {
-    let map = &SearchMap::from_map(initial_map);
+           map: &Map, shape: WorldShape) -> SearchResult {
+    let map = map.clone();
     assert_eq!(1, start.len());
     assert_eq!(1, vgoals.len());
     let mut q = start.clone();
@@ -468,7 +419,7 @@ pub fn bfs(start: Vec<Position>, vgoals: Vec<Position>,
         }
         let allowed_moves: Vec<Position> = moves(pos, shape).iter()
             .map(|new_pos| {
-                if !map.is_allowed(*new_pos) { None }
+                if !map[*new_pos].is_passable() { None }
                 else { Some (*new_pos) }
             }).filter_map(|new_pos| new_pos).collect();
         for &new_pos in allowed_moves.iter() {
@@ -482,8 +433,8 @@ pub fn bfs(start: Vec<Position>, vgoals: Vec<Position>,
 }
 
 pub fn greedy(start: Vec<Position>, vgoals: Vec<Position>,
-              initial_map: &map::Map, shape: WorldShape) -> SearchResult {
-    let map = &SearchMap::from_map(initial_map);
+              map: &Map, shape: WorldShape) -> SearchResult {
+    let map = map.clone();
     assert_eq!(1, start.len());
     assert_eq!(1, vgoals.len());
     let mut pq = BinaryHeap::new();
@@ -508,7 +459,7 @@ pub fn greedy(start: Vec<Position>, vgoals: Vec<Position>,
         }
         let moves: Vec<(isize, Position)> = moves(pos, shape).iter()
             .map(|new_pos| {
-                if !map.is_allowed(*new_pos) { None }
+                if !map[*new_pos].is_passable() { None }
                 else { Some ((- distance(*new_pos, vgoals[0], shape), *new_pos)) }
             }).filter_map(|new_pos| new_pos).collect();
         for &(cost, new_pos) in moves.iter() {
@@ -524,8 +475,8 @@ pub fn greedy(start: Vec<Position>, vgoals: Vec<Position>,
 
 #[allow(unused_parens)]
 pub fn astar(start: Vec<Position>, vgoals: Vec<Position>,
-             initial_map: &map::Map, shape: WorldShape) -> SearchResult {
-    let map = &SearchMap::from_map(initial_map);
+             map: &Map, shape: WorldShape) -> SearchResult {
+    let map = map.clone();
     assert_eq!(1, start.len());
     assert_eq!(1, vgoals.len());
     let goals = vec_to_set(vgoals.clone());
@@ -555,7 +506,7 @@ pub fn astar(start: Vec<Position>, vgoals: Vec<Position>,
         }
         let moves: Vec<Position> = moves(pos, shape).iter()
             .filter_map(|new_pos|
-                        if map.is_allowed(*new_pos) { Some (*new_pos) }
+                        if map[*new_pos].is_passable() { Some (*new_pos) }
                         else { None }).collect();
         for new_pos in moves.iter() {
             let tentative_g_score = g_score[pos] + 1;
