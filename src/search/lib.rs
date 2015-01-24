@@ -428,14 +428,12 @@ impl<'b> Iterator for BFSState {
             self.result = Some (Ok (path));
             return None
         }
-        let rated_moves: Vec<(isize, Position)> = moves(pos, self.shape).iter()
+        let allowed_moves: Vec<Position> = moves(pos, self.shape).iter()
             .map(|new_pos| {
                 if !self.map.is_allowed(*new_pos) { None }
-                else { Some ((distance(*new_pos, self.goal, self.shape), *new_pos)) }
+                else { Some (*new_pos) }
             }).filter_map(|new_pos| new_pos).collect();
-        let heap = BinaryHeap::from_vec(rated_moves);
-        let sorted_moves = heap.into_sorted_vec();
-        for &(_, new_pos) in sorted_moves.iter() {
+        for &new_pos in allowed_moves.iter() {
             if !self.visited.contains(&new_pos) {
                 self.q.push(new_pos);
                 self.visited.insert(new_pos);
@@ -470,14 +468,12 @@ pub fn bfs(start: Vec<Position>, vgoals: Vec<Position>,
                                 paths: vec![path],
                                 visited: visited.into_iter().collect() })
         }
-        let rated_moves: Vec<(isize, Position)> = moves(pos, shape).iter()
+        let allowed_moves: Vec<Position> = moves(pos, shape).iter()
             .map(|new_pos| {
                 if !map.is_allowed(*new_pos) { None }
-                else { Some ((distance(*new_pos, vgoals[0], shape), *new_pos)) }
+                else { Some (*new_pos) }
             }).filter_map(|new_pos| new_pos).collect();
-        let heap = BinaryHeap::from_vec(rated_moves);
-        let sorted_moves = heap.into_sorted_vec();
-        for &(_, new_pos) in sorted_moves.iter() {
+        for &new_pos in allowed_moves.iter() {
             if !visited.contains(&new_pos) {
                 q.push(new_pos);
                 visited.insert(new_pos);
