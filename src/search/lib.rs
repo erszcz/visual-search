@@ -2,7 +2,7 @@
 #[macro_use] extern crate log;
 extern crate png;
 
-use map::{ Map, Position };
+use map::{ Field, Map, Position };
 use std::collections::{ BinaryHeap, HashMap, HashSet };
 use std::num::Float;
 use std::ops::{ Add, Index, IndexMut };
@@ -13,13 +13,13 @@ pub mod map;
 pub struct SearchMap {
     width: usize,
     height: usize,
-    fields: Vec<map::Field>
+    fields: Vec<Field>
 }
 
 impl SearchMap {
     fn is_allowed(&self, pos: Position) -> bool {
         match self.fields[map::index(pos, self.width)] {
-            map::Field::Impassable => false,
+            Field::Impassable => false,
             _ => true
         }
     }
@@ -39,17 +39,17 @@ impl SearchMap {
 }
 
 impl Index<Position> for SearchMap {
-    type Output = map::Field;
+    type Output = Field;
 
-    fn index<'a>(&'a self, pos: &Position) -> &'a map::Field {
+    fn index<'a>(&'a self, pos: &Position) -> &'a Field {
         &self.fields[index(*pos, self.width)]
     }
 }
 
 impl IndexMut<Position> for SearchMap {
-    type Output = map::Field;
+    type Output = Field;
 
-    fn index_mut<'a>(&'a mut self, pos: &Position) -> &'a mut map::Field {
+    fn index_mut<'a>(&'a mut self, pos: &Position) -> &'a mut Field {
         &mut self.fields[index(*pos, self.width)]
     }
 }
@@ -413,15 +413,15 @@ impl<'b> Iterator for BFSState {
         if self.result.is_some()
             { return None }
         if let Some (previous) = self.previous
-            { self.map[previous] = map::Field::Visited; }
+            { self.map[previous] = Field::Visited; }
         let pos = self.q.remove(0);
         debug!("visited: {:?}", self.visited);
         debug!("current: {:?}", pos);
         debug!("steps  : {:?}", self.steps);
-        if self.map[pos] == map::Field::Goal {
+        if self.map[pos] == Field::Goal {
             let path = reconstruct_path(pos, &self.steps);
             for &pos in path.iter() {
-                self.map[pos] = map::Field::Path;
+                self.map[pos] = Field::Path;
             }
             self.result = Some (Ok (path));
             return None
@@ -435,12 +435,12 @@ impl<'b> Iterator for BFSState {
             if !self.visited.contains(&new_pos) {
                 self.q.push(new_pos);
                 self.visited.insert(new_pos);
-                self.map[new_pos] = map::Field::Frontier;
+                self.map[new_pos] = Field::Frontier;
                 self.steps.insert(new_pos, pos);
             }
         }
         self.previous = Some (self.q[0]);
-        self.map[self.q[0]] = map::Field::Current;
+        self.map[self.q[0]] = Field::Current;
         Some (self)
     }
 }
