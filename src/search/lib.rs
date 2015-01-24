@@ -363,8 +363,10 @@ impl<'b> Iterator for BFSState {
     fn next(&mut self) -> Option<&BFSState> {
         if self.result.is_some()
             { return None }
-        if let Some (previous) = self.previous
-            { self.map[previous] = Field::Visited; }
+        if self.q.is_empty() {
+            self.result = Some (Err (Error::GoalUnreachable));
+            return None
+        }
         let pos = self.q.remove(0);
         debug!("visited: {:?}", self.visited);
         debug!("current: {:?}", pos);
@@ -390,6 +392,8 @@ impl<'b> Iterator for BFSState {
                 self.steps.insert(new_pos, pos);
             }
         }
+        if let Some (previous) = self.previous
+            { self.map[previous] = Field::Visited; }
         self.previous = Some (self.q[0]);
         self.map[self.q[0]] = Field::Current;
         Some (self)
@@ -405,7 +409,7 @@ pub fn bfs(start: Vec<Position>, vgoals: Vec<Position>,
     let goals = vec_to_set(vgoals.clone());
     let mut visited = vec_to_set(start.clone());
     let mut steps = HashMap::new();
-    loop {
+    while !q.is_empty() {
         let pos = q.remove(0);
         debug!("visited: {:?}", visited);
         debug!("current: {:?}", pos);
@@ -430,6 +434,7 @@ pub fn bfs(start: Vec<Position>, vgoals: Vec<Position>,
             }
         }
     }
+    Err (Error::GoalUnreachable)
 }
 
 pub fn greedy(start: Vec<Position>, vgoals: Vec<Position>,
