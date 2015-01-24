@@ -15,7 +15,7 @@ pub struct Map {
     pub fields: Vec<Field>
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Field {
     Start,
     Goal,
@@ -37,6 +37,7 @@ impl Map {
             }).collect()
     }
 
+    #[deprecated = "remove once all search methods read goals directly from the map"]
     pub fn goals(&self) -> Vec<Position> {
         self.positions()
             .filter(|&(x,y)| match self[(x,y)] {

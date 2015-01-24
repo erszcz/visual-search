@@ -384,8 +384,7 @@ pub struct BFSState {
     pub map: SearchMap,
     q: Vec<Position>,
 
-    // TODO: these two items can be read from/written to the map itself
-    goal: Position,
+    // TODO: this item can be read from/written to the map itself
     visited: HashSet<Position>,
 
     steps: HashMap<Position, Position>,
@@ -399,7 +398,6 @@ pub fn bfs2(map: &map::Map,
             shape: WorldShape) -> BFSState {
     let start = map.start();
     BFSState { q: start.clone(),
-               goal: map.goals()[0],
                visited: vec_to_set(start),
                map: SearchMap::from_map(map),
                shape: shape,
@@ -420,7 +418,7 @@ impl<'b> Iterator for BFSState {
         debug!("visited: {:?}", self.visited);
         debug!("current: {:?}", pos);
         debug!("steps  : {:?}", self.steps);
-        if self.goal == pos {
+        if self.map[pos] == map::Field::Goal {
             let path = reconstruct_path(pos, &self.steps);
             for &pos in path.iter() {
                 self.map[pos] = map::Field::Path;
