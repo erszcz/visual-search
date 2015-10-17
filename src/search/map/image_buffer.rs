@@ -2,18 +2,18 @@ extern crate image;
 
 use super::{ Field, Map };
 
-pub type Image = image::ImageBuffer<Vec<u8>, u8, image::Rgba<u8>>;
+pub type Image = image::ImageBuffer<image::Rgba<u8>, Vec<u8>>;
 
 pub fn map_to_image_buffer(map: &Map, scale_factor: usize) -> Image {
     let w = (map.width * scale_factor) as u32;
     let h = (map.height * scale_factor) as u32;
-    image::ImageBuffer::from_fn(w, h,
-                                Box::new(|x, y| {
-                                    let pos = ((x / scale_factor as u32) as usize,
-                                               (y / scale_factor as u32) as usize);
-                                    let pixel = field_to_pixel(map[pos]);
-                                    image::Rgba (pixel)
-                                }))
+    let f = |x, y| {
+        let pos = ((x / scale_factor as u32) as usize,
+        (y / scale_factor as u32) as usize);
+        let pixel = field_to_pixel(map[pos]);
+        image::Rgba (pixel)
+    };
+    image::ImageBuffer::from_fn(w, h, f)
 }
 
 fn field_to_pixel(field: Field) -> [u8; 4] {

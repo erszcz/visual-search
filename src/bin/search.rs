@@ -1,56 +1,25 @@
-#![allow(unstable)]
-#![feature(plugin)]
-extern crate "rustc-serialize" as rustc_serialize;
-extern crate docopt;
-#[plugin] #[no_link] extern crate docopt_macros;
+extern crate rustc_serialize;
 extern crate png;
 
 extern crate search;
 
 use search::map;
-use std::io;
-
-macro_rules! errorln {
-    ($fmt:expr) => {
-        (writeln![&mut io::stdio::stderr(), $fmt]).ok().expect("log failed")
-    };
-    ($fmt:expr, $($msg:tt)*) => {
-        (writeln![&mut io::stdio::stderr(), $fmt, $($msg)*]).ok().expect("log failed")
-    };
-}
-
-docopt!{Args derive Show, "
-Usage: search [-m METHOD] [-w WORLD] <src> <dst>
-       search --help
-
-Options:
-  -m METHOD         Search method: bfs, greedy or astar.
-  -w WORLD          World to search in: torus or rectangle.
-  -h, --help        Show this message.
-"}
+use std::path::Path;
 
 fn main() {
-    let cmdline: Args = Args::docopt().decode().unwrap_or_else(|e| e.exit());
-    let img = png::load_png(&Path::new(cmdline.arg_src)).unwrap();
+    let args : Vec<String> = std::env::args().collect();
+    if args.len() < 3
+        { panic!("expected SRC and DST args") }
+    let ref arg_src = args[1];
+    let ref arg_dst = args[2];
+    let img = png::load_png(&Path::new(arg_src)).unwrap();
     let map = map::from_png(&img);
     let start = map.start();
     let goals = map.goals();
-    let world_shape = match cmdline.flag_w.as_slice() {
-        "torus" =>
-            search::WorldShape::Torus{ width: map.width, height: map.height },
-        "rectangle" | _ =>
-            search::WorldShape::Rectangle{ width: map.width, height: map.height },
-    };
-    let search_result = match cmdline.flag_m.as_slice() {
-        "greedy" =>
-            search::greedy(start.clone(), goals.clone(), &map, world_shape),
-        "astar" =>
-            search::astar(start.clone(), goals.clone(), &map, world_shape),
-        "bfs" | _ =>
-            search::bfs(start.clone(), goals.clone(), &map, world_shape)
-    };
+    let world_shape = search::WorldShape::Torus{ width: map.width, height: map.height };
+    let search_result = search::bfs(start.clone(), goals.clone(), &map, world_shape);
     match search_result {
-        Err (e) => errorln!("error: {:?}", e),
-        Ok (search) => search::save(&map, &search, cmdline.arg_dst).unwrap()
+        Err (e) => panic!("error: {:?}", e),
+        Ok (search) => search::save(&map, &search, arg_dst.clone()).unwrap()
     }
 }

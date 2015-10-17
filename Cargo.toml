@@ -4,37 +4,22 @@ version = "0.0.1"
 authors = ["Radek Szymczyszyn <lavrin@gmail.com>"]
 
 [dependencies]
-rustc-serialize = "0.2"
-
-[dependencies.docopt]
-git = "git://github.com/docopt/docopt.rs"
-
-[dependencies.docopt_macros]
-git = "git://github.com/docopt/docopt.rs"
+image = "0.3.12"
+log = "0.3.2"
+piston = "0.12.0"
+piston2d-graphics = "0.10.0"
+piston2d-opengl_graphics = "0.14.1"
+pistoncore-sdl2_window = "0.15.0"
+rustc-serialize = "0.3.16"
 
 [dependencies.png]
-git = "https://github.com/lavrin/rust-png"
+git = "https://github.com/servo/rust-png"
 
 [dependencies.piston2d-sprite]
 git = "https://github.com/pistondevelopers/sprite"
 
-[dependencies.pistoncore-sdl2_window]
-git = "https://github.com/pistondevelopers/sdl2_window"
-
-[dependencies.pistoncore-event]
-git = "https://github.com/pistondevelopers/event"
-
-[dependencies.piston2d-opengl_graphics]
-git = "https://github.com/pistondevelopers/opengl_graphics"
-
 [dependencies.shader_version]
 git = "https://github.com/pistondevelopers/shader_version"
-
-[dependencies.image]
-git = "https://github.com/pistondevelopers/image"
-
-[dependencies.piston2d-graphics]
-git = "https://github.com/pistondevelopers/graphics"
 
 [dependencies.pistoncore-input]
 git = "https://github.com/pistondevelopers/input"
@@ -47,6 +32,7 @@ name = "search"
 path = "src/search/lib.rs"
 
 [[bin]]
+doc  = false
 name = "search"
 path = "src/bin/search.rs"
 

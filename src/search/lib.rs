@@ -1,23 +1,21 @@
-#![allow(unstable)]
 #[macro_use] extern crate log;
 extern crate png;
 
 use map::{ Field, Map, Position };
 use std::collections::{ BinaryHeap, HashMap, HashSet };
-use std::num::Float;
 use std::ops::Add;
 
 pub mod map;
 
 pub type Path = Vec<Position>;
 
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub enum WorldShape {
     Rectangle { width: usize, height: usize },
     Torus { width: usize, height: usize }
 }
 
-#[derive(Copy, FromPrimitive)]
+#[derive(Clone, Copy)]
 enum Direction {
     N,
     NE,
@@ -35,19 +33,29 @@ impl Direction {
     }
 
     fn from_u8(d: u8) -> Option<Direction> {
-        std::num::FromPrimitive::from_u8(d)
+        match d {
+            0 => Some (Direction::N),
+            1 => Some (Direction::NE),
+            2 => Some (Direction::E),
+            3 => Some (Direction::SE),
+            4 => Some (Direction::S),
+            5 => Some (Direction::SW),
+            6 => Some (Direction::W),
+            7 => Some (Direction::NW),
+            _ => None
+        }
     }
 
     fn displacement(self) -> (isize, isize) {
         match self {
-            Direction::N  => ( 0is,-1is),
-            Direction::NE => ( 1is,-1is),
-            Direction::E  => ( 1is, 0is),
-            Direction::SE => ( 1is, 1is),
-            Direction::S  => ( 0is, 1is),
-            Direction::SW => (-1is, 1is),
-            Direction::W  => (-1is, 0is),
-            Direction::NW => (-1is,-1is)
+            Direction::N  => ( 0isize,-1isize),
+            Direction::NE => ( 1isize,-1isize),
+            Direction::E  => ( 1isize, 0isize),
+            Direction::SE => ( 1isize, 1isize),
+            Direction::S  => ( 0isize, 1isize),
+            Direction::SW => (-1isize, 1isize),
+            Direction::W  => (-1isize, 0isize),
+            Direction::NW => (-1isize,-1isize)
         }
     }
 }
@@ -224,7 +232,7 @@ fn moves_in_a_torus() {
                moves((1,2), torus(3, 3)));
 }
 
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 struct WorldPosition {
     x: isize,
     y: isize,
@@ -298,7 +306,7 @@ fn moves((x,y): Position, shape: WorldShape) -> Vec<Position> {
                     shape: shape }.moves().map(|wp| wp.pos()).collect()
 }
 
-#[derive(Show)]
+#[derive(Clone, Debug)]
 enum Error {
     GoalUnreachable
 }
@@ -332,6 +340,7 @@ fn distance((x1,y1): Position, (x2,y2): Position, shape: WorldShape) -> isize {
 
 fn min<T: PartialOrd>(a: T, b: T) -> T { if a < b { a } else { b } }
 
+#[derive(Clone)]
 pub struct BFSState {
     pub map: Map,
     q: Vec<Position>,
@@ -357,10 +366,10 @@ pub fn bfs2(map: Map, shape: WorldShape) -> BFSState {
                result: None }
 }
 
-impl<'b> Iterator for BFSState {
-    type Item = &'b BFSState;
+impl Iterator for BFSState {
+    type Item = BFSState;
 
-    fn next(&mut self) -> Option<&BFSState> {
+    fn next(&mut self) -> Option<BFSState> {
         if self.result.is_some()
             { return None }
         if self.q.is_empty() {
@@ -396,7 +405,7 @@ impl<'b> Iterator for BFSState {
             { self.map[previous] = Field::Visited; }
         self.previous = Some (self.q[0]);
         self.map[self.q[0]] = Field::Current;
-        Some (self)
+        Some ((*self).clone())
     }
 }
 
@@ -495,9 +504,9 @@ pub fn astar(start: Vec<Position>, vgoals: Vec<Position>,
     let start0 = start[0].clone();
     g_score.insert(start0, 0);
     let mut f_score = HashMap::new();
-    f_score.insert(start0, g_score[start0] + distance(start0, vgoals[0], shape));
+    f_score.insert(start0, g_score[&start0] + distance(start0, vgoals[0], shape));
     let mut pq = BinaryHeap::new();
-    pq.push( ( - f_score[start0], start0 ) );
+    pq.push( ( - f_score[&start0], start0 ) );
     loop {
         let pos = match pq.pop() {
             None => break,
@@ -518,15 +527,15 @@ pub fn astar(start: Vec<Position>, vgoals: Vec<Position>,
                         if map[*new_pos].is_passable() { Some (*new_pos) }
                         else { None }).collect();
         for new_pos in moves.iter() {
-            let tentative_g_score = g_score[pos] + 1;
+            let tentative_g_score = g_score[&pos] + 1;
             if (!visited.contains(new_pos)
                 || (g_score.contains_key(new_pos)
-                    && tentative_g_score < g_score[*new_pos])) {
+                    && tentative_g_score < g_score[new_pos])) {
                 g_score.insert(*new_pos, tentative_g_score);
                 f_score.insert
                     (*new_pos, (tentative_g_score
                                 + distance(*new_pos, vgoals[0], shape)));
-                pq.push((- f_score[*new_pos], *new_pos));
+                pq.push((- f_score[new_pos], *new_pos));
                 visited.insert(*new_pos);
                 steps.insert(*new_pos, pos);
             }
@@ -562,5 +571,5 @@ pub fn save(map: &Map, search: &Search, dest: String)
     map::png::draw_points(&search.paths[0], map::png::WHITE, &mut img);
     map::png::draw_points(&search.start, map::png::GREEN, &mut img);
     map::png::draw_points(&search.goals, map::png::RED, &mut img);
-    map::png::write_image(&mut img, dest.as_slice())
+    map::png::write_image(&mut img, &dest)
 }

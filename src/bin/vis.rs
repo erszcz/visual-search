@@ -1,95 +1,64 @@
-#![allow(unstable)]
-#![feature(plugin)]
-#[plugin] #[no_link] extern crate docopt_macros;
-
-extern crate "rustc-serialize" as rustc_serialize;
+extern crate rustc_serialize;
 extern crate clock_ticks;
-extern crate docopt;
-extern crate event;
 extern crate graphics;
 extern crate image;
 extern crate input;
 extern crate opengl_graphics;
+extern crate piston;
 extern crate png;
 extern crate sdl2_window;
 extern crate search;
 extern crate shader_version;
 
 use frame_counter::{ FrameCounter, FrameUpdate };
-use opengl_graphics::{ Gl,Texture };
-use sdl2_window::Sdl2Window;
+use graphics::{ clear };
+use opengl_graphics::{ GlGraphics, Texture };
+use piston::event_loop::Events;
+use piston::window::{ Window, WindowSettings };
+use sdl2_window::{ OpenGL, Sdl2Window };
 use search::map;
 use std::cell::RefCell;
-use std::io;
-
-macro_rules! errorln {
-    ($fmt:expr) => {
-        (writeln![&mut io::stdio::stderr(), $fmt]).ok().expect("log failed")
-    };
-    ($fmt:expr, $($msg:tt)*) => {
-        (writeln![&mut io::stdio::stderr(), $fmt, $($msg)*]).ok().expect("log failed")
-    };
-}
+use std::path::Path;
 
 mod frame_counter;
 
-docopt!{Args derive Show, "
-Usage: vis [-m METHOD] [-w WORLD] <map>
-       vis --help
-
-Options:
-  -m METHOD         Search method: bfs, greedy or astar.
-  -w WORLD          World to search in: torus or rectangle.
-  -h, --help        Show this message.
-"}
-
 fn main() {
-    let cmdline: Args = Args::docopt().decode().unwrap_or_else(|e| e.exit());
+    let args : Vec<String> = std::env::args().collect();
+    if args.len() < 2
+        { panic!("expected MAP") }
+    let ref arg_map = args[1];
 
-    let img = png::load_png(&Path::new(cmdline.arg_map)).unwrap();
+    let img = png::load_png(&Path::new(arg_map)).unwrap();
     let map = map::from_png(&img);
-    let shape = match cmdline.flag_w.as_slice() {
-        "torus" =>
-            search::WorldShape::Torus{ width: map.width, height: map.height },
-        "rectangle" | _ =>
-            search::WorldShape::Rectangle{ width: map.width, height: map.height },
-    };
-    let search_method = match cmdline.flag_m.as_slice() {
-        _ => search::bfs2 as fn(search::map::Map, search::WorldShape) -> search::BFSState
-    };
+    let shape = search::WorldShape::Torus{ width: map.width, height: map.height };
+    let search_method = search::bfs2
+      as fn(search::map::Map, search::WorldShape) -> search::BFSState;
 
     let scale_factor = 3;
     let mut image = map::to_image_buffer(&map, scale_factor);
     let mut search = search_method(map, shape);
 
     let mut fc = FrameCounter::from_fps(20);
-    let opengl = shader_version::OpenGL::_3_2;
+    let opengl = OpenGL::V3_2;
     let (width, height) = image.dimensions();
-    let window = Sdl2Window::new(
-        opengl,
-        event::WindowSettings {
-            title: "Graph Search".to_string(),
-            size: [width, height],
-            //fullscreen: true,
-            fullscreen: false,
-            exit_on_esc: true,
-            samples: 0
-        }
-    );
+    let window: Sdl2Window = WindowSettings::new("Graph Search".to_string(),
+                                                 [width, height])
+                                            .exit_on_esc(true)
+                                            .build().unwrap();
     let mut texture = Texture::from_image(&image);
-    let ref mut gl = Gl::new(opengl);
-    let window = RefCell::new(window);
-    for e in event::events(&window) {
-        use event::{ RenderEvent };
+    let ref mut gl = GlGraphics::new(opengl);
+    for e in window.events() {
+        use piston::input::{ RenderEvent };
         if let Some(args) = e.render_args() {
             if let FrameUpdate::NewFrame{skipped_frames, ..} = fc.update() {
-                errorln!("new frame: skipped={:?}", skipped_frames);
+                println!("new frame: skipped={:?}", skipped_frames);
                 search.next();
-                gl.draw([0, 0, args.width as i32, args.height as i32], |c, gl| {
-                    graphics::clear([0.0; 4], gl);
+                gl.draw(args.viewport(), |c, g| {
+                    clear([0.0, 0.0, 0.0, 1.0], g);
                     image = map::to_image_buffer(&search.map, scale_factor);
                     texture = Texture::from_image(&image);
-                    graphics::image(&texture, &c, gl);
+                    //Image::new().draw(&texture)
+                    graphics::image(&texture, c.transform, g);
                 });
             }
         };

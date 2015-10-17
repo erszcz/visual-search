@@ -47,7 +47,7 @@ impl Map {
             }).collect()
     }
 
-    #[deprecated = "remove once all search methods read goals directly from the map"]
+    //#[deprecated = "remove once all search methods read goals directly from the map"]
     pub fn goals(&self) -> Vec<Position> {
         self.positions()
             .filter(|&(x,y)| match self[(x,y)] {
@@ -63,7 +63,7 @@ impl Map {
 
 }
 
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub struct MapPositions { x: usize, y: usize, width: usize, size: usize }
 
 impl Iterator for MapPositions {
@@ -86,16 +86,14 @@ impl Iterator for MapPositions {
 impl Index<Position> for Map {
     type Output = Field;
 
-    fn index<'a>(&'a self, pos: &Position) -> &'a Field {
-        &self.fields[index(*pos, self.width)]
+    fn index<'a>(&'a self, pos: Position) -> &'a Field {
+        &self.fields[index(pos, self.width)]
     }
 }
 
 impl IndexMut<Position> for Map {
-    type Output = Field;
-
-    fn index_mut<'a>(&'a mut self, pos: &Position) -> &'a mut Field {
-        &mut self.fields[index(*pos, self.width)]
+    fn index_mut<'a>(&'a mut self, pos: Position) -> &'a mut Field {
+        &mut self.fields[index(pos, self.width)]
     }
 }
 

@@ -39,7 +39,7 @@ impl FrameCounter {
 
 }
 
-#[derive(PartialEq, Eq, Show)]
+#[derive(PartialEq, Eq, Debug)]
 pub enum FrameUpdate {
     NewFrame { skipped_frames: u64,
                elapsed_ns: u64 },
