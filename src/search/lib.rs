@@ -341,7 +341,7 @@ fn distance((x1,y1): Position, (x2,y2): Position, shape: WorldShape) -> isize {
 fn min<T: PartialOrd>(a: T, b: T) -> T { if a < b { a } else { b } }
 
 #[derive(Clone)]
-pub struct BFSState {
+pub struct BFSSearch {
     pub map: Map,
     q: Vec<Position>,
 
@@ -355,26 +355,21 @@ pub struct BFSState {
     result: Option<Result<Path, Error>>
 }
 
-pub fn bfs2(map: Map, shape: WorldShape) -> BFSState {
-    let start = map.start();
-    BFSState { q: start.clone(),
-               visited: vec_to_set(start),
-               map: map,
-               shape: shape,
-               steps: HashMap::new(),
-               previous: None,
-               result: None }
+pub trait GraphSearch {
+
+    fn step(&mut self);
+
 }
 
-impl Iterator for BFSState {
-    type Item = BFSState;
+impl GraphSearch for BFSSearch {
 
-    fn next(&mut self) -> Option<BFSState> {
-        if self.result.is_some()
-            { return None }
+    fn step(&mut self) {
+        if self.result.is_some() {
+            return
+        }
         if self.q.is_empty() {
             self.result = Some (Err (Error::GoalUnreachable));
-            return None
+            return
         }
         let pos = self.q.remove(0);
         debug!("visited: {:?}", self.visited);
@@ -386,7 +381,7 @@ impl Iterator for BFSState {
                 self.map[pos] = Field::Path;
             }
             self.result = Some (Ok (path));
-            return None
+            return
         }
         let allowed_moves: Vec<Position> = moves(pos, self.shape).iter()
             .map(|new_pos| {
@@ -403,10 +398,21 @@ impl Iterator for BFSState {
         }
         if let Some (previous) = self.previous
             { self.map[previous] = Field::Visited; }
-        self.previous = Some (self.q[0]);
-        self.map[self.q[0]] = Field::Current;
-        Some ((*self).clone())
+        self.previous = Some (pos);
+        self.map[pos] = Field::Current;
     }
+
+}
+
+pub fn bfs2(map: Map, shape: WorldShape) -> BFSSearch {
+    let start = map.start();
+    BFSSearch { q: start.clone(),
+                visited: vec_to_set(start),
+                map: map,
+                shape: shape,
+                steps: HashMap::new(),
+                previous: None,
+                result: None }
 }
 
 pub fn bfs(start: Vec<Position>, vgoals: Vec<Position>,

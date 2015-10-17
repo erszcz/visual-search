@@ -14,10 +14,9 @@ use frame_counter::{ FrameCounter, FrameUpdate };
 use graphics::{ clear };
 use opengl_graphics::{ GlGraphics, Texture };
 use piston::event_loop::Events;
-use piston::window::{ Window, WindowSettings };
+use piston::window::{ WindowSettings };
 use sdl2_window::{ OpenGL, Sdl2Window };
-use search::map;
-use std::cell::RefCell;
+use search::{ GraphSearch, map };
 use std::path::Path;
 
 mod frame_counter;
@@ -32,7 +31,7 @@ fn main() {
     let map = map::from_png(&img);
     let shape = search::WorldShape::Torus{ width: map.width, height: map.height };
     let search_method = search::bfs2
-      as fn(search::map::Map, search::WorldShape) -> search::BFSState;
+      as fn(search::map::Map, search::WorldShape) -> search::BFSSearch;
 
     let scale_factor = 3;
     let mut image = map::to_image_buffer(&map, scale_factor);
@@ -52,7 +51,7 @@ fn main() {
         if let Some(args) = e.render_args() {
             if let FrameUpdate::NewFrame{skipped_frames, ..} = fc.update() {
                 println!("new frame: skipped={:?}", skipped_frames);
-                search.next();
+                search.step();
                 gl.draw(args.viewport(), |c, g| {
                     clear([0.0, 0.0, 0.0, 1.0], g);
                     image = map::to_image_buffer(&search.map, scale_factor);
