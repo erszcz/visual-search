@@ -30,7 +30,7 @@ impl FrameCounter {
             self.last_ns = now_ns - now_ns % self.frame_len_ns;
             FrameUpdate::NewFrame {
                 elapsed_ns: elapsed_ns,
-                skipped_frames: elapsed_ns / self.frame_len_ns
+                elapsed_frames: elapsed_ns / self.frame_len_ns
             }
         } else {
             FrameUpdate::OldFrame
@@ -41,7 +41,7 @@ impl FrameCounter {
 
 #[derive(PartialEq, Eq, Debug)]
 pub enum FrameUpdate {
-    NewFrame { skipped_frames: u64,
+    NewFrame { elapsed_frames: u64,
                elapsed_ns: u64 },
     OldFrame
 }
@@ -57,7 +57,7 @@ fn with_25fps_after_41ms_its_a_new_frame() {
     let elapsed_ns = 41 * 1000 * 1000;
     let expected =
         FrameUpdate::NewFrame { elapsed_ns: elapsed_ns,
-                                skipped_frames: 1 };
+                                elapsed_frames: 1 };
     with_fps_after_some_ms(25, elapsed_ns, expected);
 }
 
@@ -66,7 +66,7 @@ fn with_25fps_after_81ms_its_a_new_frame() {
     let elapsed_ns = 81 * 1000 * 1000;
     let expected =
         FrameUpdate::NewFrame { elapsed_ns: elapsed_ns,
-                                skipped_frames: 2 };
+                                elapsed_frames: 2 };
     with_fps_after_some_ms(25, elapsed_ns, expected);
 }
 

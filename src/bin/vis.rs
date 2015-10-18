@@ -56,8 +56,8 @@ fn main() {
         if let Some(args) = e.render_args() {
             if pause
                 { continue }
-            if let FrameUpdate::NewFrame{skipped_frames, ..} = fc.update() {
-                println!("new frame: skipped={:?}", skipped_frames);
+            if let FrameUpdate::NewFrame{elapsed_frames, ..} = fc.update() {
+                println!("new frame: skipped={:?}", elapsed_frames - 1);
                 search.step();
                 gl.draw(args.viewport(), |c, g| {
                     clear([0.0, 0.0, 0.0, 1.0], g);
