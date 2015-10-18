@@ -62,6 +62,10 @@ fn main() {
             if scale_factor == 0 { scale_factor = 1 }
             println!("scale_factor: {}", scale_factor);
         };
+        if let Some(Button::Keyboard(Key::Q)) = e.press_args() {
+            println!("exit");
+            break
+        };
         if let Some(args) = e.render_args() {
             if pause
                 { continue }
