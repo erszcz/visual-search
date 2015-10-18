@@ -14,6 +14,7 @@ use frame_counter::{ FrameCounter, FrameUpdate };
 use graphics::{ clear };
 use opengl_graphics::{ GlGraphics, Texture };
 use piston::event_loop::Events;
+use piston::input::{ Button, Key, PressEvent, RenderEvent };
 use piston::window::{ WindowSettings };
 use sdl2_window::{ OpenGL, Sdl2Window };
 use search::{ GraphSearch, map };
@@ -46,9 +47,15 @@ fn main() {
                                             .build().unwrap();
     let mut texture = Texture::from_image(&image);
     let ref mut gl = GlGraphics::new(opengl);
+    let mut pause = false;
     for e in window.events() {
-        use piston::input::{ RenderEvent };
+        if let Some(Button::Keyboard(Key::Space)) = e.press_args() {
+            pause = !pause;
+            println!("pause: {}", pause);
+        };
         if let Some(args) = e.render_args() {
+            if pause
+                { continue }
             if let FrameUpdate::NewFrame{skipped_frames, ..} = fc.update() {
                 println!("new frame: skipped={:?}", skipped_frames);
                 search.step();
@@ -56,7 +63,6 @@ fn main() {
                     clear([0.0, 0.0, 0.0, 1.0], g);
                     image = map::to_image_buffer(&search.map, scale_factor);
                     texture = Texture::from_image(&image);
-                    //Image::new().draw(&texture)
                     graphics::image(&texture, c.transform, g);
                 });
             }
