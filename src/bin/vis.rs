@@ -34,7 +34,7 @@ fn main() {
     let search_method = search::bfs2
       as fn(search::map::Map, search::WorldShape) -> search::BFSSearch;
 
-    let scale_factor = 3;
+    let mut scale_factor = 4;
     let mut image = map::to_image_buffer(&map, scale_factor);
     let mut search = search_method(map, shape);
 
@@ -52,6 +52,15 @@ fn main() {
         if let Some(Button::Keyboard(Key::Space)) = e.press_args() {
             pause = !pause;
             println!("pause: {}", pause);
+        };
+        if let Some(Button::Keyboard(Key::Equals)) = e.press_args() {
+            scale_factor *= 2;
+            println!("scale_factor: {}", scale_factor);
+        };
+        if let Some(Button::Keyboard(Key::Minus)) = e.press_args() {
+            scale_factor /= 2;
+            if scale_factor == 0 { scale_factor = 1 }
+            println!("scale_factor: {}", scale_factor);
         };
         if let Some(args) = e.render_args() {
             if pause
