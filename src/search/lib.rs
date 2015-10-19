@@ -394,7 +394,7 @@ impl GraphSearch for BFSSearch {
             if !self.visited.contains(&new_pos) {
                 self.q.push(new_pos);
                 self.visited.insert(new_pos);
-                self.map[new_pos] = Field::Frontier;
+                //self.map[new_pos] = Field::Frontier;
                 self.steps.insert(new_pos, pos);
             }
         }
