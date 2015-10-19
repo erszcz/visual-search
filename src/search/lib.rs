@@ -307,17 +307,17 @@ fn moves((x,y): Position, shape: WorldShape) -> Vec<Position> {
 }
 
 #[derive(Clone, Debug)]
-enum Error {
+pub enum Error {
     GoalUnreachable
 }
 
 pub type SearchResult = std::result::Result<Search, Error>;
 
 pub struct Search {
-    start: Vec<Position>,
-    goals: Vec<Position>,
-    paths: Vec<Path>,
-    visited: Vec<Position>
+    pub start: Vec<Position>,
+    pub goals: Vec<Position>,
+    pub paths: Vec<Path>,
+    pub visited: Vec<Position>
 }
 
 fn distance((x1,y1): Position, (x2,y2): Position, shape: WorldShape) -> isize {
@@ -343,6 +343,8 @@ fn min<T: PartialOrd>(a: T, b: T) -> T { if a < b { a } else { b } }
 #[derive(Clone)]
 pub struct BFSSearch {
     pub map: Map,
+    pub result: Option<Result<Path, Error>>,
+
     q: Vec<Position>,
 
     // TODO: this item can be read from/written to the map itself
@@ -352,7 +354,6 @@ pub struct BFSSearch {
     shape: WorldShape,
 
     previous: Option<Position>,
-    result: Option<Result<Path, Error>>
 }
 
 pub trait GraphSearch {
@@ -430,6 +431,7 @@ pub fn bfs(start: Vec<Position>, vgoals: Vec<Position>,
         debug!("current: {:?}", pos);
         debug!("steps  : {:?}", steps);
         if goals.contains(&pos) {
+            debug!("goal found: {:?}", pos);
             let path = reconstruct_path(pos, &steps);
             return Ok (Search { start: start,
                                 goals: vgoals,
