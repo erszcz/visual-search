@@ -1,5 +1,7 @@
-extern crate rustc_serialize;
+extern crate env_logger;
+#[macro_use] extern crate log;
 extern crate png;
+extern crate rustc_serialize;
 
 extern crate search;
 
@@ -7,6 +9,7 @@ use search::map;
 use std::path::Path;
 
 fn main() {
+    env_logger::init().unwrap();
     let args : Vec<String> = std::env::args().collect();
     if args.len() < 3
         { panic!("expected SRC and DST args") }

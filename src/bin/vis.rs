@@ -1,7 +1,9 @@
 extern crate clock_ticks;
+extern crate env_logger;
 extern crate graphics;
 extern crate image;
 extern crate input;
+#[macro_use] extern crate log;
 extern crate opengl_graphics;
 extern crate piston;
 extern crate png;
@@ -23,6 +25,7 @@ use std::path::Path;
 mod frame_counter;
 
 fn main() {
+    env_logger::init().unwrap();
     let args : Vec<String> = std::env::args().collect();
     if args.len() < 2
         { panic!("expected MAP") }
