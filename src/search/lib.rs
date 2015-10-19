@@ -389,6 +389,7 @@ impl GraphSearch for BFSSearch {
                 if !self.map[*new_pos].is_passable() { None }
                 else { Some (*new_pos) }
             }).filter_map(|new_pos| new_pos).collect();
+        debug!("allowed: {:?}", allowed_moves);
         for &new_pos in allowed_moves.iter() {
             if !self.visited.contains(&new_pos) {
                 self.q.push(new_pos);
@@ -443,6 +444,7 @@ pub fn bfs(start: Vec<Position>, vgoals: Vec<Position>,
                 if !map[*new_pos].is_passable() { None }
                 else { Some (*new_pos) }
             }).filter_map(|new_pos| new_pos).collect();
+        debug!("allowed: {:?}", allowed_moves);
         for &new_pos in allowed_moves.iter() {
             if !visited.contains(&new_pos) {
                 q.push(new_pos);
