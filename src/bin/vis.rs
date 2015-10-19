@@ -1,4 +1,3 @@
-extern crate rustc_serialize;
 extern crate clock_ticks;
 extern crate graphics;
 extern crate image;
@@ -6,6 +5,7 @@ extern crate input;
 extern crate opengl_graphics;
 extern crate piston;
 extern crate png;
+extern crate rustc_serialize;
 extern crate sdl2_window;
 extern crate search;
 extern crate shader_version;
