@@ -393,14 +393,14 @@ pub trait GraphSearch {
 }
 
 #[derive(Clone)]
-pub struct BFSSearch3<Node: SearchNode> {
+pub struct BFSSearch<Node: SearchNode> {
     pub result: Option<Result<Vec<Node::Id>, Error>>,
     frontier: Vec<Node>,
     visited: HashSet<Node::Id>,
     steps: HashMap<Node::Id, Node::Id>
 }
 
-pub fn bfs3<'a>(map: Map, shape: WorldShape) -> BFSSearch3<MapField> {
+pub fn bfs<'a>(map: Map, shape: WorldShape) -> BFSSearch<MapField> {
     let rc_map = Rc::new(map);
     let start: Vec<MapField> = rc_map.start()
         .iter()
@@ -408,13 +408,13 @@ pub fn bfs3<'a>(map: Map, shape: WorldShape) -> BFSSearch3<MapField> {
                               map: rc_map.clone(),
                               shape: shape })
         .collect();
-    BFSSearch3 { result: None,
-                 frontier: start.clone(),
-                 visited: start.iter().map(|field| field.pos).collect(),
-                 steps: HashMap::new() }
+    BFSSearch { result: None,
+                frontier: start.clone(),
+                visited: start.iter().map(|field| field.pos).collect(),
+                steps: HashMap::new() }
 }
 
-impl<Node: SearchNode> GraphSearch for BFSSearch3<Node> {
+impl<Node: SearchNode> GraphSearch for BFSSearch<Node> {
 
     fn step(&mut self) {
         if self.result.is_some() {
@@ -446,117 +446,6 @@ impl<Node: SearchNode> GraphSearch for BFSSearch3<Node> {
         }
     }
 
-}
-
-#[derive(Clone)]
-pub struct BFSSearch2 {
-    pub map: Map,
-    pub result: Option<Result<Path, Error>>,
-
-    q: Vec<Position>,
-
-    // TODO: this item can be read from/written to the map itself
-    visited: HashSet<Position>,
-
-    steps: HashMap<Position, Position>,
-    shape: WorldShape,
-
-    previous: Option<Position>,
-}
-
-impl GraphSearch for BFSSearch2 {
-
-    fn step(&mut self) {
-        if self.result.is_some() {
-            return
-        }
-        if self.q.is_empty() {
-            self.result = Some (Err (Error::GoalUnreachable));
-            return
-        }
-        let pos = self.q.remove(0);
-        debug!("visited: {:?}", self.visited);
-        debug!("current: {:?}", pos);
-        debug!("steps  : {:?}", self.steps);
-        if self.map[pos] == Field::Goal {
-            debug!("goal found: {:?}", pos);
-            let path = reconstruct_path(pos, &self.steps);
-            for &pos in path.iter() {
-                self.map[pos] = Field::Path;
-            }
-            self.result = Some (Ok (path));
-            return
-        }
-        let allowed_moves: Vec<Position> = moves(pos, self.shape).iter()
-            .map(|new_pos| {
-                if !self.map[*new_pos].is_passable() { None }
-                else { Some (*new_pos) }
-            }).filter_map(|new_pos| new_pos).collect();
-        debug!("allowed: {:?}", allowed_moves);
-        for &new_pos in allowed_moves.iter() {
-            if !self.visited.contains(&new_pos) {
-                self.q.push(new_pos);
-                self.visited.insert(new_pos);
-                //self.map[new_pos] = Field::Frontier;
-                self.steps.insert(new_pos, pos);
-            }
-        }
-        if let Some (previous) = self.previous
-            { self.map[previous] = Field::Visited; }
-        self.previous = Some (pos);
-        self.map[pos] = Field::Current;
-    }
-
-}
-
-pub fn bfs2(map: Map, shape: WorldShape) -> BFSSearch2 {
-    let start = map.start();
-    BFSSearch2 { q: start.clone(),
-                 visited: vec_to_set(start),
-                 map: map,
-                 shape: shape,
-                 steps: HashMap::new(),
-                 previous: None,
-                 result: None }
-}
-
-pub fn bfs(start: Vec<Position>, vgoals: Vec<Position>,
-           map: &Map, shape: WorldShape) -> SearchResult {
-    let map = map.clone();
-    assert_eq!(1, start.len());
-    assert_eq!(1, vgoals.len());
-    let mut q = start.clone();
-    let goals = vec_to_set(vgoals.clone());
-    let mut visited = vec_to_set(start.clone());
-    let mut steps = HashMap::new();
-    while !q.is_empty() {
-        let pos = q.remove(0);
-        debug!("visited: {:?}", visited);
-        debug!("current: {:?}", pos);
-        debug!("steps  : {:?}", steps);
-        if goals.contains(&pos) {
-            debug!("goal found: {:?}", pos);
-            let path = reconstruct_path(pos, &steps);
-            return Ok (Search { start: start,
-                                goals: vgoals,
-                                paths: vec![path],
-                                visited: visited.into_iter().collect() })
-        }
-        let allowed_moves: Vec<Position> = moves(pos, shape).iter()
-            .map(|new_pos| {
-                if !map[*new_pos].is_passable() { None }
-                else { Some (*new_pos) }
-            }).filter_map(|new_pos| new_pos).collect();
-        debug!("allowed: {:?}", allowed_moves);
-        for &new_pos in allowed_moves.iter() {
-            if !visited.contains(&new_pos) {
-                q.push(new_pos);
-                visited.insert(new_pos);
-                steps.insert(new_pos, pos);
-            }
-        }
-    }
-    Err (Error::GoalUnreachable)
 }
 
 fn appraise(pos: Position, goal: Position, shape: WorldShape) -> (isize, Position) {

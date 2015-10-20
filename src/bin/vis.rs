@@ -19,8 +19,9 @@ use piston::event_loop::Events;
 use piston::input::{ Button, Key, PressEvent, RenderEvent };
 use piston::window::{ WindowSettings };
 use sdl2_window::{ OpenGL, Sdl2Window };
-use search::{ GraphSearch, map };
 use std::path::Path;
+
+use search::{ BFSSearch, GraphSearch, map, MapField };
 
 mod frame_counter;
 
@@ -34,12 +35,12 @@ fn main() {
     let img = png::load_png(&Path::new(arg_map)).unwrap();
     let map = map::from_png(&img);
     let shape = search::WorldShape::Torus{ width: map.width, height: map.height };
-    let search_method = search::bfs2
-      as fn(search::map::Map, search::WorldShape) -> search::BFSSearch2;
+    let search_method = search::bfs
+      as fn(search::map::Map, search::WorldShape) -> BFSSearch<MapField>;
 
     let mut scale_factor = 4;
     let mut image = map::to_image_buffer(&map, scale_factor);
-    let mut search = search_method(map, shape);
+    let mut search = search_method(map.clone(), shape);
 
     let mut fc = FrameCounter::from_fps(20);
     let opengl = OpenGL::V3_2;
@@ -80,7 +81,7 @@ fn main() {
                 search.step();
                 gl.draw(args.viewport(), |c, g| {
                     clear([0.0, 0.0, 0.0, 1.0], g);
-                    image = map::to_image_buffer(&search.map, scale_factor);
+                    image = map::to_image_buffer(&map, scale_factor);
                     texture = Texture::from_image(&image);
                     graphics::image(&texture, c.transform, g);
                 });
