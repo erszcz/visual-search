@@ -1,5 +1,4 @@
 #[macro_use] extern crate log;
-extern crate png;
 
 use graph::{ BFSSearch, SearchNode };
 use map::{ Field, Map, Position };

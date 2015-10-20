@@ -1,7 +1,7 @@
 extern crate png;
 
-use png::Image;
-use png::PixelsByColorType::{ RGB8, RGBA8 };
+use self::png::Image;
+use self::png::PixelsByColorType::{ RGB8, RGBA8 };
 use super::{ Field, Map, Position };
 use std::iter::repeat;
 use std::path::Path;
