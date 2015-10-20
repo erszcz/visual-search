@@ -1,6 +1,7 @@
 #[macro_use] extern crate log;
 extern crate png;
 
+use graph::{ BFSSearch, SearchNode };
 use map::{ Field, Map, Position };
 use std::collections::{ BinaryHeap, HashMap, HashSet };
 use std::fmt::Debug;
@@ -8,6 +9,7 @@ use std::hash::Hash;
 use std::ops::Add;
 use std::rc::Rc;
 
+pub mod graph;
 pub mod map;
 
 pub type Path = Vec<Position>;
@@ -343,13 +345,6 @@ fn distance((x1,y1): Position, (x2,y2): Position, shape: WorldShape) -> isize {
 
 fn min<T: PartialOrd>(a: T, b: T) -> T { if a < b { a } else { b } }
 
-pub trait SearchNode: Clone + Eq + Hash {
-    type Id: Clone + Debug + Eq + Hash;
-    fn id(&self) -> Self::Id;
-    fn is_goal(&self) -> bool;
-    fn neighbours(&self) -> Vec<Self>;
-}
-
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct MapField {
     map:    Rc<Map>,
@@ -386,20 +381,6 @@ impl SearchNode for MapField {
 
 }
 
-pub trait GraphSearch {
-
-    fn step(&mut self);
-
-}
-
-#[derive(Clone)]
-pub struct BFSSearch<Node: SearchNode> {
-    pub result: Option<Result<Vec<Node::Id>, Error>>,
-    frontier: Vec<Node>,
-    visited: HashSet<Node::Id>,
-    steps: HashMap<Node::Id, Node::Id>
-}
-
 pub fn bfs<'a>(map: Map, shape: WorldShape) -> BFSSearch<MapField> {
     let rc_map = Rc::new(map);
     let start: Vec<MapField> = rc_map.start()
@@ -412,40 +393,6 @@ pub fn bfs<'a>(map: Map, shape: WorldShape) -> BFSSearch<MapField> {
                 frontier: start.clone(),
                 visited: start.iter().map(|field| field.pos).collect(),
                 steps: HashMap::new() }
-}
-
-impl<Node: SearchNode> GraphSearch for BFSSearch<Node> {
-
-    fn step(&mut self) {
-        if self.result.is_some() {
-            return
-        }
-        if self.frontier.is_empty() {
-            self.result = Some (Err (Error::GoalUnreachable));
-            return
-        }
-        let current = self.frontier.remove(0);
-        debug!("visited: {:?}", self.visited);
-        debug!("current: {:?}", current.id());
-        debug!("steps  : {:?}", self.steps);
-        if current.is_goal() {
-            debug!("goal found: {:?}", current.id());
-            let path = reconstruct_path2::<Node>(current.id(), &self.steps);
-            self.result = Some (Ok (path));
-            return
-        }
-        let neighbours = current.neighbours();
-        let n_ids: Vec<Node::Id> = neighbours.iter().map(|n| n.id()).collect();
-        debug!("allowed: {:?}", n_ids);
-        for next in neighbours.iter() {
-            if !self.visited.contains(&next.id()) {
-                self.frontier.push(next.clone());
-                self.visited.insert(next.id());
-                self.steps.insert(next.id(), current.id());
-            }
-        }
-    }
-
 }
 
 fn appraise(pos: Position, goal: Position, shape: WorldShape) -> (isize, Position) {
@@ -560,21 +507,6 @@ fn reconstruct_path(goal: Position, steps: &HashMap<Position, Position>)
         match steps.get(&last) {
             None => break,
             Some (step) => last = *step
-        }
-    }
-    path
-}
-
-fn reconstruct_path2<Node: SearchNode>
-        (goal: Node::Id,
-         steps: &HashMap<Node::Id, Node::Id>) -> Vec<Node::Id> {
-    let mut path = vec!();
-    let mut last = goal;
-    loop {
-        path.push(last.clone());
-        match steps.get(&last) {
-            None => break,
-            Some (step) => last = step.clone()
         }
     }
     path

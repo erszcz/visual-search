@@ -21,7 +21,8 @@ use piston::window::{ WindowSettings };
 use sdl2_window::{ OpenGL, Sdl2Window };
 use std::path::Path;
 
-use search::{ BFSSearch, GraphSearch, map, MapField };
+use search::{ map, MapField };
+use search::graph::{ BFSSearch, GraphSearch };
 
 mod frame_counter;
 

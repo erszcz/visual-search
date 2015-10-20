@@ -5,8 +5,8 @@ extern crate rustc_serialize;
 
 extern crate search;
 
-use search::{ GraphSearch, Search };
-use search::map;
+use search::graph::GraphSearch;
+use search::{ map, Search };
 use std::path::Path;
 
 #[derive(Debug)]
