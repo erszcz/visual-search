@@ -377,6 +377,7 @@ impl GraphSearch for BFSSearch {
         debug!("current: {:?}", pos);
         debug!("steps  : {:?}", self.steps);
         if self.map[pos] == Field::Goal {
+            debug!("goal found: {:?}", pos);
             let path = reconstruct_path(pos, &self.steps);
             for &pos in path.iter() {
                 self.map[pos] = Field::Path;
