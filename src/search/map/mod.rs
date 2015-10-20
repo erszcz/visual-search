@@ -9,14 +9,14 @@ pub mod png;
 
 pub type Position = (usize, usize);
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Map {
     pub width: usize,
     pub height: usize,
     pub fields: Vec<Field>
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Field {
     Start,
     Goal,

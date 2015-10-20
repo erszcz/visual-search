@@ -35,7 +35,7 @@ fn main() {
     let map = map::from_png(&img);
     let shape = search::WorldShape::Torus{ width: map.width, height: map.height };
     let search_method = search::bfs2
-      as fn(search::map::Map, search::WorldShape) -> search::BFSSearch;
+      as fn(search::map::Map, search::WorldShape) -> search::BFSSearch2;
 
     let mut scale_factor = 4;
     let mut image = map::to_image_buffer(&map, scale_factor);

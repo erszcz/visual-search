@@ -12,7 +12,8 @@ use std::path::Path;
 #[derive(Debug)]
 enum Method {
     BFS,
-    BFS2
+    BFS2,
+    BFS3
 }
 
 fn main() {
@@ -27,6 +28,7 @@ fn main() {
     let method = std::env::var("SEARCH_METHOD")
         .map(|m| if m == "bfs"       { Method::BFS }
                  else if m == "bfs2" { Method::BFS2 }
+                 else if m == "bfs3" { Method::BFS3 }
                  else                { info!("unknown search method: {:?}", m);
                                        Method::BFS })
         .unwrap_or(Method::BFS);
@@ -49,6 +51,11 @@ fn do_search(map: &search::map::Map, method: Method)
             .map(|path| Search { start: start,
                                  goals: goals,
                                  paths: vec![path],
+                                 visited: vec![] }),
+        Method::BFS3 => do_bfs3(map.clone(), world_shape)
+            .map(|path| Search { start: start,
+                                 goals: goals,
+                                 paths: vec![path],
                                  visited: vec![] })
     }
 }
@@ -60,4 +67,13 @@ fn do_bfs2(map: search::map::Map, shape: search::WorldShape)
         state.step();
     }
     state.result.expect("do_bfs2 error")
+}
+
+fn do_bfs3(map: search::map::Map, shape: search::WorldShape)
+        -> Result<search::Path, search::Error> {
+    let mut state = search::bfs3(map, shape);
+    while let None = state.result {
+        state.step();
+    }
+    state.result.expect("do_bfs3 error")
 }
