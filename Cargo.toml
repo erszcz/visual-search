@@ -7,23 +7,11 @@ authors = ["Radek Szymczyszyn <lavrin@gmail.com>"]
 env_logger = "0.3"
 image = "0.3.12"
 log = "0.3"
-piston = "0.12.0"
-piston2d-graphics = "0.10.0"
-piston2d-opengl_graphics = "0.14.1"
-pistoncore-sdl2_window = "0.15.0"
 rustc-serialize = "0.3.16"
+sfml = "0.9.3"
 
 [dependencies.png]
 git = "https://github.com/servo/rust-png"
-
-[dependencies.piston2d-sprite]
-git = "https://github.com/pistondevelopers/sprite"
-
-[dependencies.shader_version]
-git = "https://github.com/pistondevelopers/shader_version"
-
-[dependencies.pistoncore-input]
-git = "https://github.com/pistondevelopers/input"
 
 [dependencies.clock_ticks]
 git = "https://github.com/tomaka/clock_ticks"

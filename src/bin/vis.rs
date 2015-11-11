@@ -1,30 +1,24 @@
 extern crate clock_ticks;
 extern crate env_logger;
-extern crate graphics;
-extern crate image;
-extern crate input;
 #[macro_use] extern crate log;
-extern crate opengl_graphics;
-extern crate piston;
 extern crate png;
-extern crate rustc_serialize;
-extern crate sdl2_window;
 extern crate search;
-extern crate shader_version;
+extern crate sfml;
 
 use frame_counter::{ FrameCounter, FrameUpdate };
-use graphics::{ clear };
-use opengl_graphics::{ GlGraphics, Texture };
-use piston::event_loop::Events;
-use piston::input::{ Button, Event, Key, PressEvent, RenderEvent };
-use piston::window::{ WindowSettings };
-use sdl2_window::{ OpenGL, Sdl2Window };
-use std::path::Path;
-
-use search::{ map, MapField };
 use search::graph::{ BFSSearch, GraphSearch };
+use search::{ map, MapField };
+use sfml::graphics::{RenderWindow, Color, Shape, RenderTarget};
+use sfml::system::Vector2f;
+use sfml::traits::ShapeImpl;
+use sfml::window::keyboard::Key;
+use sfml::window::{VideoMode, ContextSettings, event, Close};
+use std::path::Path;
+use std::rc::Rc;
 
 mod frame_counter;
+
+const DEFAULT_SCALE_FACTOR: usize = 4;
 
 fn main() {
     env_logger::init().unwrap();
@@ -39,74 +33,68 @@ fn main() {
     let search_method = search::bfs
       as fn(search::map::Map, search::WorldShape) -> BFSSearch<MapField>;
 
-    let mut app = AppState { pause: false,
-                             scale_factor: 4,
-                             exit: false };
-
-    let mut image = map::to_image_buffer(&map, app.scale_factor);
+    let mut image = map::to_image_buffer(&map, DEFAULT_SCALE_FACTOR);
     let mut search = search_method(map.clone(), shape);
-
     let mut fc = FrameCounter::from_fps(20);
-    let opengl = OpenGL::V3_2;
-    let (width, height) = image.dimensions();
-    let window: Sdl2Window = WindowSettings::new("Graph Search".to_string(),
-                                                 [width, height])
-                                            .exit_on_esc(true)
-                                            .build().unwrap();
-    let mut texture = Texture::from_image(&image);
-    let ref mut gl = GlGraphics::new(opengl);
-    for e in window.events() {
-        app.process_input_event(&e);
-        if app.exit {
-            break
+    let (w, h) = image.dimensions();
+    let mut app = AppState { pause: false,
+                             scale_factor: DEFAULT_SCALE_FACTOR,
+                             exit: false,
+                             window: create_window(w, h) };
+
+    'exit: while app.window.is_open() {
+        for e in app.window.events() {
+            app.process_input_event(&e)
         }
-        if let Some(args) = e.render_args() {
-            if app.pause
-                { continue }
-            if let FrameUpdate::NewFrame{elapsed_frames: fs,
-                                         elapsed_ns: ns} = fc.update() {
-                println!("new frame: ms={:?} skipped={:?}",
-                         ns / 1_000_000,
-                         fs - 1);
-                search.step();
-                gl.draw(args.viewport(), |c, g| {
-                    clear([0.0, 0.0, 0.0, 1.0], g);
-                    image = map::to_image_buffer(&map, app.scale_factor);
-                    texture = Texture::from_image(&image);
-                    graphics::image(&texture, c.transform, g);
-                });
-            }
-        };
+        if app.exit { break 'exit; }
+        else if app.pause { continue }
+        else if let FrameUpdate::NewFrame{elapsed_frames: fs, elapsed_ns: ns} = fc.update() {
+            println!("new frame: ms={:?} skipped={:?}",
+                     ns / 1_000_000,
+                     fs - 1);
+            app.window.clear(&Color::black());
+            search.step();
+            //app.window.draw(&search);
+            app.window.display();
+        }
     }
 }
+
+
 
 struct AppState {
     pause: bool,
     scale_factor: usize,
-    exit: bool
+    exit: bool,
+    window: RenderWindow
 }
 
 impl AppState {
 
-    fn process_input_event(&mut self, e: &Event) {
-
-        if let Some(Button::Keyboard(Key::Space)) = e.press_args() {
-            self.pause = !self.pause;
-            println!("pause: {}", self.pause);
-        };
-        if let Some(Button::Keyboard(Key::Equals)) = e.press_args() {
-            self.scale_factor *= 2;
-            println!("scale_factor: {}", self.scale_factor);
-        };
-        if let Some(Button::Keyboard(Key::Minus)) = e.press_args() {
-            self.scale_factor /= 2;
-            if self.scale_factor == 0 { self.scale_factor = 1 }
-            println!("scale_factor: {}", self.scale_factor);
-        };
-        if let Some(Button::Keyboard(Key::Q)) = e.press_args() {
-            println!("exit");
-            self.exit = true;
-        };
+    fn process_input_event(&mut self, e: &event::Event) {
+        match e {
+            &event::Closed => self.window.close(),
+            &event::KeyPressed{code, ..} => match code {
+                Key::Escape => {
+                    self.window.close();
+                    self.exit = true;
+                },
+                _ => {}
+            },
+            _ => {}
+        }
     }
 
+}
+
+fn create_window(width: u32, height: u32) -> RenderWindow {
+    let setting: ContextSettings = ContextSettings::default();
+    let mut window: RenderWindow = match RenderWindow::new(VideoMode::new_init(width, height, 32),
+                                                           "SFML Shape Example", Close, &setting)
+    {
+        Some(window) => window,
+        None => panic!("Cannot create a new Render Window.")
+    };
+    window.set_vertical_sync_enabled(true);
+    window
 }
