@@ -34,8 +34,8 @@ fn do_search(map: &search::map::Map, method: Method)
         -> Result<search::Search, search::Error> {
     let start = map.start();
     let goals = map.goals();
-    let world_shape = search::WorldShape::Rectangle{ width: map.width,
-                                                     height: map.height };
+    let world_shape = search::WorldShape::Rectangle{ width: map.width as isize,
+                                                     height: map.height as isize};
     info!("searching with {:?}", method);
     match method {
         Method::BFS => do_bfs(map.clone(), world_shape)

@@ -29,7 +29,7 @@ fn main() {
 
     let img = png::load_png(&Path::new(arg_map)).unwrap();
     let map = map::from_png(&img);
-    let shape = search::WorldShape::Torus{ width: map.width, height: map.height };
+    let shape = search::WorldShape::Torus{ width: map.width as isize, height: map.height as isize };
     let search_method = search::bfs
       as fn(search::map::Map, search::WorldShape) -> BFSSearch<MapField>;
 

@@ -4,8 +4,6 @@ use graph::{ BFSSearch, SearchNode };
 use map::{ Field, Map, Position };
 use std::collections::{ BinaryHeap, HashMap, HashSet };
 use std::fmt::Debug;
-use std::hash::Hash;
-use std::ops::Add;
 use std::rc::Rc;
 
 pub mod graph;
@@ -15,8 +13,8 @@ pub type Path = Vec<Position>;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum WorldShape {
-    Rectangle { width: usize, height: usize },
-    Torus { width: usize, height: usize }
+    Rectangle { width: isize, height: isize },
+    Torus { width: isize, height: isize }
 }
 
 #[derive(Clone, Copy)]
@@ -52,14 +50,14 @@ impl Direction {
 
     fn displacement(self) -> (isize, isize) {
         match self {
-            Direction::N  => ( 0isize,-1isize),
-            Direction::NE => ( 1isize,-1isize),
-            Direction::E  => ( 1isize, 0isize),
-            Direction::SE => ( 1isize, 1isize),
-            Direction::S  => ( 0isize, 1isize),
-            Direction::SW => (-1isize, 1isize),
-            Direction::W  => (-1isize, 0isize),
-            Direction::NW => (-1isize,-1isize)
+            Direction::N  => ( 0, -1),
+            Direction::NE => ( 1, -1),
+            Direction::E  => ( 1,  0),
+            Direction::SE => ( 1,  1),
+            Direction::S  => ( 0,  1),
+            Direction::SW => (-1,  1),
+            Direction::W  => (-1,  0),
+            Direction::NW => (-1, -1)
         }
     }
 }
@@ -82,12 +80,12 @@ impl Iterator for Directions {
 }
 
 #[cfg(test)]
-fn rectangle(w: usize, h: usize) -> WorldShape {
+fn rectangle(w: isize, h: isize) -> WorldShape {
     WorldShape::Rectangle { width: w, height: h }
 }
 
 #[cfg(test)]
-fn torus(w: usize, h: usize) -> WorldShape {
+fn torus(w: isize, h: isize) -> WorldShape {
     WorldShape::Torus { width: w, height: h }
 }
 
@@ -236,78 +234,34 @@ fn moves_in_a_torus() {
                moves((1,2), torus(3, 3)));
 }
 
-#[derive(Clone, Copy)]
-struct WorldPosition {
-    x: isize,
-    y: isize,
-    shape: WorldShape
+fn moves((px,py): Position, world: WorldShape) -> Vec<Position> {
+    let (x0,y0) = (px as isize, py as isize);
+    Direction::iter()
+              .filter_map(|dir| { let (dx, dy) = dir.displacement();
+                                  crop((x0 + dx, y0 + dy), world) })
+              .collect()
 }
 
-impl WorldPosition {
+// Return Some (adjusted_wp) within the WorldShape
+// or None if the position doesn't fit in the shape.
+fn crop((x0, y0): (isize, isize), shape: WorldShape) -> Option<Position> {
+    match shape {
+        WorldShape::Torus {width, height} => {
+            Some ((
+                    if x0 >= width  { x0 - width }
+                    else if x0 < 0  { x0 + width }
+                    else            { x0 } as usize,
 
-    fn pos(&self) -> Position { (self.x as usize, self.y as usize) }
-
-    fn moves(&self) -> WorldPositions {
-        WorldPositions {
-            wp: *self,
-            directions: Direction::iter() }
-    }
-
-    // Return Some (adjusted_wp) within the WorldShape
-    // or None if the position doesn't fit in the shape.
-    fn shear_off(&self) -> Option<WorldPosition> {
-        match self.shape {
-            WorldShape::Torus {width, height} => {
-                let (swidth, sheight) = (width as isize, height as isize);
-                Some (WorldPosition { x: (self.x + swidth) % swidth,
-                                      y: (self.y + sheight) % sheight,
-                                      shape: self.shape })
-            }
-            WorldShape::Rectangle {width, height}
-                if (self.x >= 0 && self.x < width as isize &&
-                    self.y >= 0 && self.y < height as isize) =>
-                Some (*self),
-            _ =>
-                None
+                    if y0 >= height { y0 - height }
+                    else if y0 < 0  { y0 + height }
+                    else            { y0 } as usize
+                  ))
         }
+        WorldShape::Rectangle {width, height}
+            if (x0 >= 0 && x0 < width && y0 >= 0 && y0 < height)
+                   => Some ((x0 as usize, y0 as usize)),
+        _otherwise => None
     }
-
-}
-
-impl Add<(isize, isize)> for WorldPosition {
-    type Output = WorldPosition;
-
-    fn add(self, (x,y): (isize, isize)) -> WorldPosition {
-        WorldPosition { x: self.x + x,
-                        y: self.y + y,
-                        shape: self.shape }
-    }
-}
-
-struct WorldPositions {
-    wp: WorldPosition,
-    directions: Directions
-}
-
-impl Iterator for WorldPositions {
-    type Item = WorldPosition;
-
-    fn next(&mut self) -> Option<WorldPosition> {
-        match self.directions.next() {
-            None => None,
-            Some (dir) => {
-                let new_wp = (self.wp + dir.displacement()).shear_off();
-                if new_wp.is_some()
-                    { new_wp } else { self.next() }
-                }
-            }
-    }
-}
-
-fn moves((x,y): Position, shape: WorldShape) -> Vec<Position> {
-    WorldPosition { x: x as isize,
-                    y: y as isize,
-                    shape: shape }.moves().map(|wp| wp.pos()).collect()
 }
 
 #[derive(Clone, Debug)]
