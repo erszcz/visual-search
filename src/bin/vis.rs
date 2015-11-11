@@ -8,11 +8,21 @@ extern crate sfml;
 use frame_counter::{ FrameCounter, FrameUpdate };
 use search::graph::{ BFSSearch, GraphSearch };
 use search::{ map, MapField };
-use sfml::graphics::{RenderWindow, Color, Shape, RenderTarget};
+use sfml::graphics::{
+    Color,
+    PrimitiveType,
+    rc,
+    RenderStates,
+    RenderTarget,
+    RenderWindow,
+    Shape,
+    Vertex,
+    VertexArray
+};
 use sfml::system::Vector2f;
-use sfml::traits::ShapeImpl;
+use sfml::traits::{ Drawable, ShapeImpl };
 use sfml::window::keyboard::Key;
-use sfml::window::{VideoMode, ContextSettings, event, Close};
+use sfml::window::{ VideoMode, ContextSettings, event, Close };
 use std::path::Path;
 use std::rc::Rc;
 
@@ -40,22 +50,77 @@ fn main() {
                              exit: false,
                              window: create_window(w, h) };
 
+    let mut snapshot = BFSSearchSnapshot::new((w, h));
+    snapshot.update(&search);
+    app.window.clear(&Color::black());
+
     'exit: while app.window.is_open() {
         for e in app.window.events() {
             app.process_input_event(&e)
         }
         if app.exit { break 'exit; }
         else if app.pause { continue }
-        else if let FrameUpdate::NewFrame{elapsed_frames: fs, elapsed_ns: ns} = fc.update() {
+        search.step();
+        if let FrameUpdate::NewFrame{elapsed_frames: fs, elapsed_ns: ns} = fc.update() {
             println!("new frame: ms={:?} skipped={:?}",
                      ns / 1_000_000,
                      fs - 1);
-            app.window.clear(&Color::black());
-            search.step();
-            //app.window.draw(&search);
+            snapshot.update(&search);
+            app.window.draw(&snapshot);
             app.window.display();
         }
     }
+}
+
+struct BFSSearchSnapshot {
+    size: u32,
+    vertices: VertexArray
+}
+
+impl BFSSearchSnapshot {
+
+    fn new((width, height): (u32, u32)) -> BFSSearchSnapshot {
+        let size = width * height;
+        // allocate in one go
+        let va = VertexArray::new_init(PrimitiveType::Points, size)
+            .expect("can't allocate vertex array");
+        BFSSearchSnapshot { size: size, vertices: va }
+    }
+
+    fn update(&mut self, search: &BFSSearch<MapField>) {
+        // TODO: ok, this is fucking lame for now... but let's have something,
+        //       and make it good later
+        self.vertices.clear();
+        for node in search.visited.iter() {
+            self.vertices.append(&pos_to_vertex(*node, &Color::cyan()));
+        }
+    }
+
+}
+
+fn pos_to_vertex((x, y): (usize, usize), color: &Color) -> Vertex {
+    let v2f = Vector2f::new(x as f32, y as f32);
+    Vertex::new_with_pos_color(&v2f, color)
+}
+
+impl Drawable for BFSSearchSnapshot {
+
+    fn draw<RT: RenderTarget>(&self, render_target: &mut RT) -> () {
+        render_target.draw_vertex_array(&self.vertices)
+    }
+
+    fn draw_rs<RT: RenderTarget>(&self,
+                                 render_target: &mut RT,
+                                 render_states: &mut RenderStates) -> () {
+        render_target.draw_vertex_array_rs(&self.vertices, render_states)
+    }
+
+    fn draw_rs_rc<RT: RenderTarget>(&self,
+                                    render_target: &mut RT,
+                                    render_states: &mut rc::RenderStates) -> () {
+        render_target.draw_vertex_array_rs_rc(&self.vertices, render_states)
+    }
+
 }
 
 struct AppState {
@@ -75,10 +140,27 @@ impl AppState {
                     self.window.close();
                     self.exit = true;
                 },
+                Key::Equal => {
+                    self.zoom(0.8);
+                    println!("=");
+                },
+                Key::Dash => {
+                    self.zoom(1.25);
+                    println!("-");
+                },
                 _ => {}
             },
             _ => {}
         }
+    }
+
+    fn zoom(&mut self, factor: f32) {
+        let mut v = self.window.get_default_view();
+        let center = v.get_center() * factor;
+        v.set_center(&center);
+        v.zoom(factor);
+        self.window.set_view(&v);
+        self.window.clear(&Color::black());
     }
 
 }
