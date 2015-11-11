@@ -58,8 +58,6 @@ fn main() {
     }
 }
 
-
-
 struct AppState {
     pause: bool,
     scale_factor: usize,
