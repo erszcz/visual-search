@@ -47,25 +47,25 @@ fn main() {
     let (w, h) = image.dimensions();
     let mut app = AppState { pause: false,
                              scale_factor: DEFAULT_SCALE_FACTOR,
-                             exit: false,
+                             search: search,
+                             saved_search: None,
                              window: create_window(w, h) };
 
     let mut snapshot = BFSSearchSnapshot::new((w, h));
-    snapshot.update(&search);
+    snapshot.update(&app.search);
     app.window.clear(&Color::black());
+    app.save();
 
-    'exit: while app.window.is_open() {
+    while app.window.is_open() {
         for e in app.window.events() {
             app.process_input_event(&e)
         }
-        if app.exit { break 'exit; }
-        else if app.pause { continue }
-        search.step();
+        if !app.pause   { app.search.step(); }
         if let FrameUpdate::NewFrame{elapsed_frames: fs, elapsed_ns: ns} = fc.update() {
             println!("new frame: ms={:?} skipped={:?}",
                      ns / 1_000_000,
                      fs - 1);
-            snapshot.update(&search);
+            snapshot.update(&app.search);
             app.window.draw(&snapshot);
             app.window.display();
         }
@@ -93,6 +93,9 @@ impl BFSSearchSnapshot {
         self.vertices.clear();
         for node in search.visited.iter() {
             self.vertices.append(&pos_to_vertex(*node, &Color::cyan()));
+        }
+        for field in search.frontier.iter() {
+            self.vertices.append(&pos_to_vertex(field.pos, &Color::red()));
         }
     }
 
@@ -126,8 +129,9 @@ impl Drawable for BFSSearchSnapshot {
 struct AppState {
     pause: bool,
     scale_factor: usize,
-    exit: bool,
-    window: RenderWindow
+    search: BFSSearch<MapField>,
+    window: RenderWindow,
+    saved_search: Option<BFSSearch<MapField>>
 }
 
 impl AppState {
@@ -136,18 +140,12 @@ impl AppState {
         match e {
             &event::Closed => self.window.close(),
             &event::KeyPressed{code, ..} => match code {
-                Key::Escape => {
-                    self.window.close();
-                    self.exit = true;
-                },
-                Key::Equal => {
-                    self.zoom(0.8);
-                    println!("=");
-                },
-                Key::Dash => {
-                    self.zoom(1.25);
-                    println!("-");
-                },
+                Key::Escape => self.window.close(),
+                Key::Equal  => self.zoom(0.8),
+                Key::Dash   => self.zoom(1.25),
+                Key::Space  => self.pause = !self.pause,
+                Key::S      => self.save(),
+                Key::R      => self.restore(),
                 _ => {}
             },
             _ => {}
@@ -161,6 +159,22 @@ impl AppState {
         v.zoom(factor);
         self.window.set_view(&v);
         self.window.clear(&Color::black());
+        println!("zoom by {:?}", factor);
+    }
+
+    fn save(&mut self) {
+        self.saved_search = Some (self.search.clone());
+        println!("saved search state");
+    }
+
+    fn restore(&mut self) {
+        if let Some (ref saved) = self.saved_search {
+            self.search = saved.clone();
+            self.window.clear(&Color::black());
+            println!("restored search state");
+        } else {
+            println!("no saved search state!");
+        }
     }
 
 }

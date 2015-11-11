@@ -173,8 +173,8 @@ fn distance((x1,y1): Position, (x2,y2): Position) -> isize {
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct MapField {
-    map:    Rc<Map>,
-    pos:    Position
+    pub pos:    Position,
+    map:        Rc<Map>
 }
 
 impl std::fmt::Debug for MapField {

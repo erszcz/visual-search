@@ -17,6 +17,7 @@ pub trait GraphSearch {
 
 }
 
+#[derive(Clone)]
 pub struct BFSSearch<Node: SearchNode> {
     pub result: Option<Result<Vec<Node::Id>, Error>>,
     pub frontier: Vec<Node>,
