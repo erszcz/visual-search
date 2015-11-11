@@ -97,6 +97,11 @@ impl BFSSearchSnapshot {
         for field in search.frontier.iter() {
             self.vertices.append(&pos_to_vertex(field.pos, &Color::red()));
         }
+        if let Some (Ok (ref path)) = search.result {
+            for node in path.iter() {
+                self.vertices.append(&pos_to_vertex(*node, &Color::blue()));
+            }
+        }
     }
 
 }
