@@ -11,12 +11,6 @@ pub mod map;
 
 pub type Path = Vec<Position>;
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
-pub enum WorldShape {
-    Rectangle { width: isize, height: isize },
-    Torus { width: isize, height: isize }
-}
-
 #[derive(Clone, Copy)]
 enum Direction {
     N,
@@ -79,35 +73,25 @@ impl Iterator for Directions {
     }
 }
 
-#[cfg(test)]
-fn rectangle(w: isize, h: isize) -> WorldShape {
-    WorldShape::Rectangle { width: w, height: h }
-}
-
-#[cfg(test)]
-fn torus(w: isize, h: isize) -> WorldShape {
-    WorldShape::Torus { width: w, height: h }
-}
-
 #[test]
-fn moves_in_a_rectangle() {
+fn moves_test() {
     // (x,y): top-left is (0,0), top-right is (1,0).
     // o.
     // ..
     assert_eq!(vec![(1,0), (1,1), (0,1)],
-               moves((0,0), rectangle(2, 2)));
+               moves((0,0), (2, 2)));
     // ..
     // o.
     assert_eq!(vec![(0,0), (1,0), (1,1)],
-               moves((0,1), rectangle(2, 2)));
+               moves((0,1), (2, 2)));
     // ..
     // .o
     assert_eq!(vec![(1,0), (0,1), (0,0)],
-               moves((1,1), rectangle(2, 2)));
+               moves((1,1), (2, 2)));
     // .o
     // ..
     assert_eq!(vec![(1,1), (0,1), (0,0)],
-               moves((1,0), rectangle(2, 2)));
+               moves((1,0), (2, 2)));
     // Numbers are indices into the example positions vector.
     // 7 0 1
     // 6 o 2
@@ -117,7 +101,7 @@ fn moves_in_a_rectangle() {
                            (2,2), (1,2), (0,2),
                                          (0,1),
                                          (0,0)],
-               moves((1,1), rectangle(3, 3)));
+               moves((1,1), (3, 3)));
     // Dots are unreachable in 1 step.
     // . 0 1
     // . o 2
@@ -125,7 +109,7 @@ fn moves_in_a_rectangle() {
     assert_eq!(vec![(0,0), (1,0),
                            (1,1),
                            (1,2), (0,2)],
-               moves((0,1), rectangle(3, 3)));
+               moves((0,1), (3, 3)));
     // . 4 0
     // . 3 o
     // . 2 1
@@ -133,134 +117,36 @@ fn moves_in_a_rectangle() {
                     (2,2), (1,2),
                            (1,1),
                            (1,0)],
-               moves((2,1), rectangle(3, 3)));
+               moves((2,1), (3, 3)));
     // 4 o 0
     // 3 2 1
     // . . .
     assert_eq!(vec![(2,0),
                     (2,1), (1,1), (0,1),
                                   (0,0)],
-               moves((1,0), rectangle(3, 3)));
+               moves((1,0), (3, 3)));
     // . . .
     // 4 0 1
     // 3 o 2
     assert_eq!(vec![(1,1), (2,1),
                            (2,2), (0,2),
                                   (0,1)],
-               moves((1,2), rectangle(3, 3)));
+               moves((1,2), (3, 3)));
 }
 
-#[test]
-fn moves_in_a_torus() {
-    // (x,y): top-left is (0,0), top-right is (1,0).
-    // o.
-    // ..
-    assert_eq!(vec![(0,1), (1,1),
-                           (1,0),
-                           (1,1), (0,1), (1,1),
-                                         (1,0),
-                                         (1,1)],
-               moves((0,0), torus(2, 2)));
-    // ..
-    // o.
-    assert_eq!(vec![(0,0), (1,0),
-                           (1,1),
-                           (1,0), (0,0), (1,0),
-                                         (1,1),
-                                         (1,0)],
-               moves((0,1), torus(2, 2)));
-    // ..
-    // .o
-    assert_eq!(vec![(1,0), (0,0),
-                           (0,1),
-                           (0,0), (1,0), (0,0),
-                                         (0,1),
-                                         (0,0)],
-               moves((1,1), torus(2, 2)));
-    // .o
-    // ..
-    assert_eq!(vec![(1,1), (0,1),
-                           (0,0),
-                           (0,1), (1,1), (0,1),
-                                         (0,0),
-                                         (0,1)],
-               moves((1,0), torus(2, 2)));
-    // Numbers are indices into the example positions vector.
-    // 7 0 1
-    // 6 o 2
-    // 5 4 3
-    assert_eq!(vec![(1,0), (2,0),
-                           (2,1),
-                           (2,2), (1,2), (0,2),
-                                         (0,1),
-                                         (0,0)],
-               moves((1,1), torus(3, 3)));
-    // Dots are unreachable in 1 step.
-    // 0 1 7
-    // o 2 6
-    // 4 3 5
-    assert_eq!(vec![(0,0), (1,0),
-                           (1,1),
-                           (1,2), (0,2), (2,2),
-                                         (2,1),
-                                         (2,0)],
-               moves((0,1), torus(3, 3)));
-    // 1 7 0
-    // 2 6 o
-    // 3 5 4
-    assert_eq!(vec![(2,0), (0,0),
-                           (0,1),
-                           (0,2), (2,2), (1,2),
-                                         (1,1),
-                                         (1,0)],
-               moves((2,1), torus(3, 3)));
-    // 6 o 2
-    // 5 4 3
-    // 7 0 1
-    assert_eq!(vec![(1,2), (2,2),
-                           (2,0),
-                           (2,1), (1,1), (0,1),
-                                         (0,0),
-                                         (0,2)],
-               moves((1,0), torus(3, 3)));
-    // 5 4 3
-    // 7 0 1
-    // 6 o 2
-    assert_eq!(vec![(1,1), (2,1),
-                           (2,2),
-                           (2,0), (1,0), (0,0),
-                                         (0,2),
-                                         (0,1)],
-               moves((1,2), torus(3, 3)));
-}
-
-fn moves((px,py): Position, world: WorldShape) -> Vec<Position> {
+fn moves((px,py): Position, dimensions: (isize, isize)) -> Vec<Position> {
     let (x0,y0) = (px as isize, py as isize);
     Direction::iter()
               .filter_map(|dir| { let (dx, dy) = dir.displacement();
-                                  crop((x0 + dx, y0 + dy), world) })
+                                  crop((x0 + dx, y0 + dy), dimensions) })
               .collect()
 }
 
-// Return Some (adjusted_wp) within the WorldShape
-// or None if the position doesn't fit in the shape.
-fn crop((x0, y0): (isize, isize), shape: WorldShape) -> Option<Position> {
-    match shape {
-        WorldShape::Torus {width, height} => {
-            Some ((
-                    if x0 >= width  { x0 - width }
-                    else if x0 < 0  { x0 + width }
-                    else            { x0 } as usize,
-
-                    if y0 >= height { y0 - height }
-                    else if y0 < 0  { y0 + height }
-                    else            { y0 } as usize
-                  ))
-        }
-        WorldShape::Rectangle {width, height}
-            if (x0 >= 0 && x0 < width && y0 >= 0 && y0 < height)
-                   => Some ((x0 as usize, y0 as usize)),
-        _otherwise => None
+fn crop((x0, y0): (isize, isize), (width, height): (isize, isize)) -> Option<Position> {
+    if x0 >= 0 && x0 < width && y0 >= 0 && y0 < height {
+        Some ((x0 as usize, y0 as usize))
+    } else {
+        None
     }
 }
 
@@ -278,30 +164,16 @@ pub struct Search {
     pub visited: Vec<Position>
 }
 
-fn distance((x1,y1): Position, (x2,y2): Position, shape: WorldShape) -> isize {
+fn distance((x1,y1): Position, (x2,y2): Position) -> isize {
     let (fx1, fy1, fx2, fy2) = (x1 as f64, y1 as f64, x2 as f64, y2 as f64);
-    match shape {
-        WorldShape::Rectangle {..} => {
-            let dx = fx2 - fx1;
-            let dy = fy2 - fy1;
-            (dx * dx + dy * dy).sqrt().round() as isize
-        }
-        WorldShape::Torus {width, height} => {
-            let (w, h) = (width as f64, height as f64);
-            // sqrt(min(|x1 - x2|, w - |x1 - x2|)^2 + min(|y1 - y2|, h - |y1-y2|)^2)
-            let minx = min((fx1 - fx2).abs(), w - (fx1 - fx2).abs());
-            let miny = min((fy1 - fy2).abs(), h - (fy1 - fy2).abs());
-            (minx * minx + miny * miny).sqrt().round() as isize
-        }
-    }
+    let dx = fx2 - fx1;
+    let dy = fy2 - fy1;
+    (dx * dx + dy * dy).sqrt().round() as isize
 }
-
-fn min<T: PartialOrd>(a: T, b: T) -> T { if a < b { a } else { b } }
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct MapField {
     map:    Rc<Map>,
-    shape:  WorldShape,
     pos:    Position
 }
 
@@ -323,24 +195,22 @@ impl SearchNode for MapField {
     }
 
     fn neighbours(&self) -> Vec<MapField> {
-        moves(self.pos, self.shape)
+        moves(self.pos, self.map.isize_dimensions())
             .iter()
             .filter(|moved| self.map[**moved].is_passable())
             .map(|moved| MapField { map: self.map.clone(),
-                shape: self.shape,
-                pos: *moved })
+                                    pos: *moved })
             .collect()
     }
 
 }
 
-pub fn bfs<'a>(map: Map, shape: WorldShape) -> BFSSearch<MapField> {
+pub fn bfs<'a>(map: Map) -> BFSSearch<MapField> {
     let rc_map = Rc::new(map);
     let start: Vec<MapField> = rc_map.start()
         .iter()
         .map(|pos| MapField { pos: *pos,
-                              map: rc_map.clone(),
-                              shape: shape })
+                              map: rc_map.clone() })
         .collect();
     BFSSearch { result: None,
                 frontier: start.clone(),
@@ -348,17 +218,17 @@ pub fn bfs<'a>(map: Map, shape: WorldShape) -> BFSSearch<MapField> {
                 steps: HashMap::new() }
 }
 
-fn appraise(pos: Position, goal: Position, shape: WorldShape) -> (isize, Position) {
-    ( -distance(pos, goal, shape), pos )
+fn appraise(pos: Position, goal: Position) -> (isize, Position) {
+    ( -distance(pos, goal), pos )
 }
 
 pub fn greedy(start: Vec<Position>, vgoals: Vec<Position>,
-              map: &Map, shape: WorldShape) -> SearchResult {
+              map: &Map) -> SearchResult {
     let map = map.clone();
     assert_eq!(1, start.len());
     assert_eq!(1, vgoals.len());
     let mut pq = BinaryHeap::new();
-    pq.push( appraise(start[0], vgoals[0], shape) );
+    pq.push( appraise(start[0], vgoals[0]) );
     let goals = vec_to_set(vgoals.clone());
     let mut visited = vec_to_set(start.clone());
     let mut steps = HashMap::new();
@@ -377,10 +247,10 @@ pub fn greedy(start: Vec<Position>, vgoals: Vec<Position>,
                                 paths: vec![path],
                                 visited: visited.into_iter().collect() })
         }
-        let moves: Vec<(isize, Position)> = moves(pos, shape).iter()
+        let moves: Vec<(isize, Position)> = moves(pos, map.isize_dimensions()).iter()
             .map(|new_pos| {
                 if !map[*new_pos].is_passable() { None }
-                else { Some (appraise(*new_pos, vgoals[0], shape)) }
+                else { Some (appraise(*new_pos, vgoals[0])) }
             }).filter_map(|new_pos| new_pos).collect();
         for &(cost, new_pos) in moves.iter() {
             if !visited.contains(&new_pos) {
@@ -395,7 +265,7 @@ pub fn greedy(start: Vec<Position>, vgoals: Vec<Position>,
 
 #[allow(unused_parens)]
 pub fn astar(start: Vec<Position>, vgoals: Vec<Position>,
-             map: &Map, shape: WorldShape) -> SearchResult {
+             map: &Map) -> SearchResult {
     let map = map.clone();
     assert_eq!(1, start.len());
     assert_eq!(1, vgoals.len());
@@ -406,7 +276,7 @@ pub fn astar(start: Vec<Position>, vgoals: Vec<Position>,
     let start0 = start[0].clone();
     g_score.insert(start0, 0);
     let mut f_score = HashMap::new();
-    f_score.insert(start0, g_score[&start0] + distance(start0, vgoals[0], shape));
+    f_score.insert(start0, g_score[&start0] + distance(start0, vgoals[0]));
     let mut pq = BinaryHeap::new();
     pq.push( ( - f_score[&start0], start0 ) );
     loop {
@@ -424,7 +294,7 @@ pub fn astar(start: Vec<Position>, vgoals: Vec<Position>,
                                 paths: vec![path],
                                 visited: visited.into_iter().collect() })
         }
-        let moves: Vec<Position> = moves(pos, shape).iter()
+        let moves: Vec<Position> = moves(pos, map.isize_dimensions()).iter()
             .filter_map(|new_pos|
                         if map[*new_pos].is_passable() { Some (*new_pos) }
                         else { None }).collect();
@@ -436,7 +306,7 @@ pub fn astar(start: Vec<Position>, vgoals: Vec<Position>,
                 g_score.insert(*new_pos, tentative_g_score);
                 f_score.insert
                     (*new_pos, (tentative_g_score
-                                + distance(*new_pos, vgoals[0], shape)));
+                                + distance(*new_pos, vgoals[0])));
                 pq.push((- f_score[new_pos], *new_pos));
                 visited.insert(*new_pos);
                 steps.insert(*new_pos, pos);

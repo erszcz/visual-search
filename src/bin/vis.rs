@@ -29,12 +29,10 @@ fn main() {
 
     let img = png::load_png(&Path::new(arg_map)).unwrap();
     let map = map::from_png(&img);
-    let shape = search::WorldShape::Torus{ width: map.width as isize, height: map.height as isize };
-    let search_method = search::bfs
-      as fn(search::map::Map, search::WorldShape) -> BFSSearch<MapField>;
+    let search_method = search::bfs as fn(search::map::Map) -> BFSSearch<MapField>;
 
     let mut image = map::to_image_buffer(&map, DEFAULT_SCALE_FACTOR);
-    let mut search = search_method(map.clone(), shape);
+    let mut search = search_method(map.clone());
     let mut fc = FrameCounter::from_fps(20);
     let (w, h) = image.dimensions();
     let mut app = AppState { pause: false,

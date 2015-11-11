@@ -61,6 +61,10 @@ impl Map {
                        size: self.width * self.height }
     }
 
+    pub fn isize_dimensions(&self) -> (isize, isize) {
+        (self.width as isize, self.height as isize)
+    }
+
 }
 
 #[derive(Clone, Copy)]
