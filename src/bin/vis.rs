@@ -16,7 +16,7 @@ use frame_counter::{ FrameCounter, FrameUpdate };
 use graphics::{ clear };
 use opengl_graphics::{ GlGraphics, Texture };
 use piston::event_loop::Events;
-use piston::input::{ Button, Key, PressEvent, RenderEvent };
+use piston::input::{ Button, Event, Key, PressEvent, RenderEvent };
 use piston::window::{ WindowSettings };
 use sdl2_window::{ OpenGL, Sdl2Window };
 use std::path::Path;
@@ -39,8 +39,11 @@ fn main() {
     let search_method = search::bfs
       as fn(search::map::Map, search::WorldShape) -> BFSSearch<MapField>;
 
-    let mut scale_factor = 4;
-    let mut image = map::to_image_buffer(&map, scale_factor);
+    let mut app = AppState { pause: false,
+                             scale_factor: 4,
+                             exit: false };
+
+    let mut image = map::to_image_buffer(&map, app.scale_factor);
     let mut search = search_method(map.clone(), shape);
 
     let mut fc = FrameCounter::from_fps(20);
@@ -52,27 +55,13 @@ fn main() {
                                             .build().unwrap();
     let mut texture = Texture::from_image(&image);
     let ref mut gl = GlGraphics::new(opengl);
-    let mut pause = false;
     for e in window.events() {
-        if let Some(Button::Keyboard(Key::Space)) = e.press_args() {
-            pause = !pause;
-            println!("pause: {}", pause);
-        };
-        if let Some(Button::Keyboard(Key::Equals)) = e.press_args() {
-            scale_factor *= 2;
-            println!("scale_factor: {}", scale_factor);
-        };
-        if let Some(Button::Keyboard(Key::Minus)) = e.press_args() {
-            scale_factor /= 2;
-            if scale_factor == 0 { scale_factor = 1 }
-            println!("scale_factor: {}", scale_factor);
-        };
-        if let Some(Button::Keyboard(Key::Q)) = e.press_args() {
-            println!("exit");
+        app.process_input_event(&e);
+        if app.exit {
             break
-        };
+        }
         if let Some(args) = e.render_args() {
-            if pause
+            if app.pause
                 { continue }
             if let FrameUpdate::NewFrame{elapsed_frames: fs,
                                          elapsed_ns: ns} = fc.update() {
@@ -82,11 +71,42 @@ fn main() {
                 search.step();
                 gl.draw(args.viewport(), |c, g| {
                     clear([0.0, 0.0, 0.0, 1.0], g);
-                    image = map::to_image_buffer(&map, scale_factor);
+                    image = map::to_image_buffer(&map, app.scale_factor);
                     texture = Texture::from_image(&image);
                     graphics::image(&texture, c.transform, g);
                 });
             }
         };
     }
+}
+
+struct AppState {
+    pause: bool,
+    scale_factor: usize,
+    exit: bool
+}
+
+impl AppState {
+
+    fn process_input_event(&mut self, e: &Event) {
+
+        if let Some(Button::Keyboard(Key::Space)) = e.press_args() {
+            self.pause = !self.pause;
+            println!("pause: {}", self.pause);
+        };
+        if let Some(Button::Keyboard(Key::Equals)) = e.press_args() {
+            self.scale_factor *= 2;
+            println!("scale_factor: {}", self.scale_factor);
+        };
+        if let Some(Button::Keyboard(Key::Minus)) = e.press_args() {
+            self.scale_factor /= 2;
+            if self.scale_factor == 0 { self.scale_factor = 1 }
+            println!("scale_factor: {}", self.scale_factor);
+        };
+        if let Some(Button::Keyboard(Key::Q)) = e.press_args() {
+            println!("exit");
+            self.exit = true;
+        };
+    }
+
 }
