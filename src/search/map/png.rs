@@ -1,7 +1,5 @@
 extern crate png;
 
-use self::png::Image;
-use self::png::PixelsByColorType::{ RGB8, RGBA8 };
 use super::{ Field, Map, Position };
 use std::iter::repeat;
 use std::path::Path;
@@ -15,18 +13,29 @@ pub const RED  : ColorRGB8 = (255,  0,  0);
 pub const GREEN: ColorRGB8 = (  0,255,  0);
 pub const BLUE : ColorRGB8 = (  0,  0,255);
 
-pub fn map_from_png(img: &Image) -> Map {
-    let fields = match img.pixels {
-        RGB8(ref pixels) => pixels_to_fields(pixels, img.width as usize,
-                                             img.height as usize, 3),
-        RGBA8(ref pixels) => pixels_to_fields(pixels, img.width as usize,
-                                              img.height as usize, 4),
-        _ => panic!("only RGB8 and RGBA8 modes are supported")
-    };
-    Map { width: img.width as usize,
-          height: img.height as usize,
-          fields: fields }
+pub enum Pixels {
+    RGB8(Vec<u8>),
+    RGBA8(Vec<u8>)
 }
+
+pub struct Image {
+    width: u32,
+    height: u32,
+    pixels: Pixels,
+}
+
+//pub fn map_from_png(img: &Image) -> Map {
+//    let fields = match img.pixels {
+//        RGB8(ref pixels) => pixels_to_fields(pixels, img.width as usize,
+//                                             img.height as usize, 3),
+//        RGBA8(ref pixels) => pixels_to_fields(pixels, img.width as usize,
+//                                              img.height as usize, 4),
+//        _ => panic!("only RGB8 and RGBA8 modes are supported")
+//    };
+//    Map { width: img.width as usize,
+//          height: img.height as usize,
+//          fields: fields }
+//}
 
 pub fn map_to_png(map: &Map) -> Image {
     let mut pixels: Vec<u8> = Vec::with_capacity(3 * map.width * map.height);
@@ -41,7 +50,7 @@ pub fn map_to_png(map: &Map) -> Image {
     }
     Image { width: map.width as u32,
             height: map.height as u32,
-            pixels: RGB8 (pixels) }
+            pixels: Pixels::RGB8 (pixels) }
 }
 
 fn pixels_to_fields(pixels: &Vec<u8>, width: usize, height: usize,
@@ -73,13 +82,13 @@ pub fn draw_points(points: &Vec<Position>, color: ColorRGB8,
 
 fn putpixel(pos: (usize,usize), color: ColorRGB8, img: &mut Image) {
     let pixel_width: u8 = match img.pixels {
-        RGB8(_) => 3,
-        RGBA8(_) => 4,
+        Pixels::RGB8(_) => 3,
+        Pixels::RGBA8(_) => 4,
         _ => panic!("only RGB8 and RGBA8 modes are supported")
     };
     match img.pixels {
-        RGB8(ref mut pixels) |
-        RGBA8(ref mut pixels) => {
+        Pixels::RGB8(ref mut pixels) |
+        Pixels::RGBA8(ref mut pixels) => {
             for i in (0 .. pixel_width) {
                 pixels[index(pos, img.width as usize, pixel_width) + i as usize] =
                     color_by_width(color, pixel_width, i)
@@ -113,6 +122,6 @@ fn index((x,y): (usize,usize), width: usize, bytes_per_color: u8) -> usize {
     y * width * bytes_per_color as usize + x * bytes_per_color as usize
 }
 
-pub fn write_image(img: &mut png::Image, dst: &str) -> Result<(), String> {
-    png::store_png(img, &Path::new(dst))
-}
+//pub fn write_image(img: &mut png::Image, dst: &str) -> Result<(), String> {
+//    png::store_png(img, &Path::new(dst))
+//}
