@@ -15,18 +15,19 @@ enum Method {
 }
 
 fn main() {
-    env_logger::init().unwrap();
+    env_logger::init();
     let args : Vec<String> = std::env::args().collect();
     if args.len() < 3
         { panic!("expected SRC and DST args") }
     let ref arg_src = args[1];
     let ref arg_dst = args[2];
-    let img = png::load_png(&Path::new(arg_src)).unwrap();
-    let map = map::from_png(&img);
+    //let img = png::load_png(&Path::new(arg_src)).unwrap();
+    //let map = map::from_png(&img);
+    let map = map::png::load(arg_src);
     let method = Method::BFS;
     match do_search(&map, method) {
         Err (e) => panic!("error: {:?}", e),
-        Ok (result) => search::save(&map, &result, arg_dst.clone()).unwrap()
+        Ok (result) => map::png::save(&map, &result, arg_dst.clone())
     }
 }
 

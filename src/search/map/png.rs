@@ -1,8 +1,8 @@
 extern crate png;
 
 use super::{ Field, Map, Position };
+use super::super::Search;
 use std::iter::repeat;
-use std::path::Path;
 
 pub type ColorRGB8 = (u8,u8,u8);
 
@@ -137,6 +137,14 @@ fn index((x,y): (usize,usize), width: usize, bytes_per_color: u8) -> usize {
     y * width * bytes_per_color as usize + x * bytes_per_color as usize
 }
 
+pub fn save(map: &Map, search: &Search, dest: String) {
+    let mut img = map_to_png(map);
+    draw_points(&search.visited, GRAY, &mut img);
+    draw_points(&search.paths[0], WHITE, &mut img);
+    draw_points(&search.start, GREEN, &mut img);
+    draw_points(&search.goals, RED, &mut img);
+    write_image(&mut img, &dest);
+}
 
 pub fn write_image(img: &mut Image, dest: &str) -> () {
     let path = std::path::Path::new(dest);

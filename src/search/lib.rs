@@ -334,14 +334,3 @@ fn reconstruct_path(goal: Position, steps: &HashMap<Position, Position>)
     }
     path
 }
-
-//pub fn save(map: &Map, search: &Search, dest: String)
-//    -> std::result::Result<(), String>
-//{
-//    let mut img = map::to_png(map);
-//    map::png::draw_points(&search.visited, map::png::GRAY, &mut img);
-//    map::png::draw_points(&search.paths[0], map::png::WHITE, &mut img);
-//    map::png::draw_points(&search.start, map::png::GREEN, &mut img);
-//    map::png::draw_points(&search.goals, map::png::RED, &mut img);
-//    map::png::write_image(&mut img, &dest)
-//}
