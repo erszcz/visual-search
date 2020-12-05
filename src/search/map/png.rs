@@ -15,21 +15,21 @@ pub const BLUE : ColorRGB8 = (  0,  0,255);
 
 pub enum Pixels {
     RGB8(Vec<u8>),
-    RGBA8(Vec<u8>)
+    //RGBA8(Vec<u8>)
 }
 
 pub struct Image {
-    width: u32,
-    height: u32,
-    pixels: Pixels,
+    pub width: u32,
+    pub height: u32,
+    pub pixels: Pixels,
 }
 
 //pub fn map_from_png(img: &Image) -> Map {
 //    let fields = match img.pixels {
-//        RGB8(ref pixels) => pixels_to_fields(pixels, img.width as usize,
+//        Pixels::RGB8(ref pixels) => pixels_to_fields(pixels, img.width as usize,
 //                                             img.height as usize, 3),
-//        RGBA8(ref pixels) => pixels_to_fields(pixels, img.width as usize,
-//                                              img.height as usize, 4),
+//        //Pixels::RGBA8(ref pixels) => pixels_to_fields(pixels, img.width as usize,
+//        //                                      img.height as usize, 4),
 //        _ => panic!("only RGB8 and RGBA8 modes are supported")
 //    };
 //    Map { width: img.width as usize,
@@ -81,20 +81,22 @@ pub fn draw_points(points: &Vec<Position>, color: ColorRGB8,
 }
 
 fn putpixel(pos: (usize,usize), color: ColorRGB8, img: &mut Image) {
-    let pixel_width: u8 = match img.pixels {
-        Pixels::RGB8(_) => 3,
-        Pixels::RGBA8(_) => 4,
-        _ => panic!("only RGB8 and RGBA8 modes are supported")
-    };
+    let pixel_width: u8 = 3;
+    //match img.pixels {
+    //    Pixels::RGB8(_) => 3,
+    //    //Pixels::RGBA8(_) => 4,
+    //    _ => panic!("only RGB8 and RGBA8 modes are supported")
+    //};
     match img.pixels {
-        Pixels::RGB8(ref mut pixels) |
-        Pixels::RGBA8(ref mut pixels) => {
+        //Pixels::RGB8(ref mut pixels) |
+        //Pixels::RGBA8(ref mut pixels) => {
+        Pixels::RGB8(ref mut pixels) => {
             for i in (0 .. pixel_width) {
                 pixels[index(pos, img.width as usize, pixel_width) + i as usize] =
                     color_by_width(color, pixel_width, i)
             }
         }
-        _ => panic!("only RGB8 and RGBA8 modes are supported")
+        //_ => panic!("only RGB8 and RGBA8 modes are supported")
     }
 }
 
@@ -122,6 +124,17 @@ fn index((x,y): (usize,usize), width: usize, bytes_per_color: u8) -> usize {
     y * width * bytes_per_color as usize + x * bytes_per_color as usize
 }
 
-//pub fn write_image(img: &mut png::Image, dst: &str) -> Result<(), String> {
-//    png::store_png(img, &Path::new(dst))
-//}
+
+pub fn write_image(img: &mut Image, dest: &str) -> () {
+    let path = std::path::Path::new(dest);
+    let file = std::fs::File::create(path).unwrap();
+    let ref mut w = std::io::BufWriter::new(file);
+
+    let mut encoder = png::Encoder::new(w, img.width, img.height);
+    encoder.set_color(png::ColorType::RGB);
+    encoder.set_depth(png::BitDepth::Eight);
+    let mut writer = encoder.write_header().unwrap();
+
+    let Pixels::RGB8(ref data) = img.pixels;
+    writer.write_image_data(&data).unwrap();
+}
