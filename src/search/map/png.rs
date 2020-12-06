@@ -26,6 +26,18 @@ pub struct Image {
     pub pixels: Pixels,
 }
 
+pub fn load(source: &str) -> Map {
+    let image = load_image(source);
+    let w = image.width as usize;
+    let h = image.height as usize;
+    let Pixels::RGB8(ref pixels) = image.pixels;
+    Map {
+        width: w,
+        height: h,
+        fields: pixels_to_fields(pixels, w, h, 3)
+    }
+}
+
 pub fn load_image(source: &str) -> Image {
     let decoder = png::Decoder::new(std::fs::File::open(source).unwrap());
     let (info, mut reader) = decoder.read_info().unwrap();
