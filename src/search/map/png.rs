@@ -13,29 +13,30 @@ pub const RED  : ColorRGB8 = (255,  0,  0);
 pub const GREEN: ColorRGB8 = (  0,255,  0);
 pub const BLUE : ColorRGB8 = (  0,  0,255);
 
+#[derive(Debug)]
 pub enum Pixels {
     RGB8(Vec<u8>),
     //RGBA8(Vec<u8>)
 }
 
+#[derive(Debug)]
 pub struct Image {
     pub width: u32,
     pub height: u32,
     pub pixels: Pixels,
 }
 
-//pub fn map_from_png(img: &Image) -> Map {
-//    let fields = match img.pixels {
-//        Pixels::RGB8(ref pixels) => pixels_to_fields(pixels, img.width as usize,
-//                                             img.height as usize, 3),
-//        //Pixels::RGBA8(ref pixels) => pixels_to_fields(pixels, img.width as usize,
-//        //                                      img.height as usize, 4),
-//        _ => panic!("only RGB8 and RGBA8 modes are supported")
-//    };
-//    Map { width: img.width as usize,
-//          height: img.height as usize,
-//          fields: fields }
-//}
+pub fn load_image(source: &str) -> Image {
+    let decoder = png::Decoder::new(std::fs::File::open(source).unwrap());
+    let (info, mut reader) = decoder.read_info().unwrap();
+    let mut buf = vec![0; info.buffer_size()];
+    reader.next_frame(&mut buf).unwrap();
+    Image {
+        width: info.width,
+        height: info.height,
+        pixels: Pixels::RGB8(buf)
+    }
+}
 
 pub fn map_to_png(map: &Map) -> Image {
     let mut pixels: Vec<u8> = Vec::with_capacity(3 * map.width * map.height);
@@ -50,7 +51,7 @@ pub fn map_to_png(map: &Map) -> Image {
     }
     Image { width: map.width as u32,
             height: map.height as u32,
-            pixels: Pixels::RGB8 (pixels) }
+            pixels: Pixels::RGB8(pixels) }
 }
 
 fn pixels_to_fields(pixels: &Vec<u8>, width: usize, height: usize,
