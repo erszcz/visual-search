@@ -151,3 +151,26 @@ pub fn write_image(img: &mut Image, dest: &str) -> () {
     let Pixels::RGB8(ref data) = img.pixels;
     writer.write_image_data(&data).unwrap();
 }
+
+#[cfg(test)]
+mod tests {
+
+    const TEST_IMAGE: &str = "test/write-read-image.png";
+
+    #[test]
+    fn write_read_image() {
+        let data1 = vec![255, 0, 0,   0, 255,   0,   0,   0, 255,
+                           0, 0, 0, 127, 127, 127, 255, 255, 255];
+        let expected = data1.clone();
+        let mut image1 = super::Image {
+            width: 3,
+            height: 2,
+            pixels: super::Pixels::RGB8(data1)
+        };
+        super::write_image(&mut image1, TEST_IMAGE);
+        let image2 = super::load_image(TEST_IMAGE);
+        let super::Pixels::RGB8(data2) = image2.pixels;
+        assert_eq!(&expected[..], &data2[..]);
+    }
+
+}
