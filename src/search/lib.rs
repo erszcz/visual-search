@@ -180,7 +180,7 @@ pub struct MapField {
 
 impl std::fmt::Debug for MapField {
     fn fmt(&self, formatter: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
-        formatter.write_str(&format!("{:?}", self.pos));
+        formatter.write_str(&format!("{:?}", self.pos)).unwrap();
         Ok (())
     }
 }

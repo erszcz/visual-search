@@ -1,6 +1,6 @@
 extern crate clock_ticks;
 extern crate env_logger;
-#[macro_use] extern crate log;
+extern crate log;
 extern crate png;
 extern crate search;
 extern crate sfml;
@@ -20,8 +20,6 @@ use sfml::graphics::{
 };
 use sfml::system::Vector2f;
 use sfml::window::{ Event, Key, VideoMode, ContextSettings };
-use std::path::Path;
-use std::rc::Rc;
 
 const DEFAULT_SCALE_FACTOR: usize = 4;
 
@@ -35,12 +33,11 @@ fn main() {
     let map = map::png::load(arg_map);
     let search_method = search::bfs as fn(search::map::Map) -> BFSSearch<MapField>;
 
-    let mut image = map::to_image_buffer(&map, DEFAULT_SCALE_FACTOR);
-    let mut search = search_method(map.clone());
+    let image = map::to_image_buffer(&map, DEFAULT_SCALE_FACTOR);
+    let search = search_method(map.clone());
     let mut fc = FrameCounter::from_fps(20);
     let (w, h) = image.dimensions();
     let mut app = AppState { pause: false,
-                             scale_factor: DEFAULT_SCALE_FACTOR,
                              search: search,
                              saved_search: None,
                              window: create_window(w, h) };
@@ -67,7 +64,6 @@ fn main() {
 }
 
 struct BFSSearchSnapshot {
-    size: u32,
     vertices: VertexArray
 }
 
@@ -77,7 +73,7 @@ impl BFSSearchSnapshot {
         let size = width * height;
         // allocate in one go
         let va = VertexArray::new(PrimitiveType::Points, size as usize);
-        BFSSearchSnapshot { size: size, vertices: va }
+        BFSSearchSnapshot { vertices: va }
     }
 
     fn update(&mut self, search: &BFSSearch<MapField>) {
@@ -118,7 +114,6 @@ impl Drawable for BFSSearchSnapshot {
 
 struct AppState {
     pause: bool,
-    scale_factor: usize,
     search: BFSSearch<MapField>,
     window: RenderWindow,
     saved_search: Option<BFSSearch<MapField>>

@@ -1,7 +1,7 @@
 extern crate clock_ticks;
 
 pub struct FrameCounter {
-    fps: u32,
+    _fps: u32,
     frame_len_ns: u64,
     last_ns: u64
 }
@@ -18,7 +18,7 @@ impl FrameCounter {
 
     #[inline]
     fn from_fps_and_last(fps: u32, last_ns: u64) -> FrameCounter {
-        FrameCounter { fps: fps,
+        FrameCounter { _fps: fps,
                        frame_len_ns: (1e9 / fps as f64) as u64,
                        last_ns: last_ns }
     }

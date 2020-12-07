@@ -70,7 +70,7 @@ fn pixels_to_fields(pixels: &Vec<u8>, width: usize, height: usize,
                     bytes_per_pixel: usize) -> Vec<Field> {
     let mut fields: Vec<Field> =
         repeat(Field::Passable).take(width * height).collect();
-    for i in (0 .. width * height) {
+    for i in 0 .. width * height {
         let j = i * bytes_per_pixel;
         let color: ColorRGB8 = (pixels[j], pixels[j+1], pixels[j+2]);
         fields[i] = pixel_to_field(color);
@@ -104,7 +104,7 @@ fn putpixel(pos: (usize,usize), color: ColorRGB8, img: &mut Image) {
         //Pixels::RGB8(ref mut pixels) |
         //Pixels::RGBA8(ref mut pixels) => {
         Pixels::RGB8(ref mut pixels) => {
-            for i in (0 .. pixel_width) {
+            for i in 0 .. pixel_width {
                 pixels[index(pos, img.width as usize, pixel_width) + i as usize] =
                     color_by_width(color, pixel_width, i)
             }

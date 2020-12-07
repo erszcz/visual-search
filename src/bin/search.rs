@@ -7,7 +7,6 @@ extern crate search;
 
 use search::graph::GraphSearch;
 use search::{ map, Search };
-use std::path::Path;
 
 #[derive(Debug)]
 enum Method {
