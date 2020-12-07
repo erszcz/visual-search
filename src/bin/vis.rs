@@ -38,10 +38,13 @@ fn main() {
     let search = search_method(map.clone());
     let mut fc = FrameCounter::from_fps(20);
     let (w, h) = image.dimensions();
-    let mut app = AppState { pause: false,
-                             search: search,
-                             saved_search: None,
-                             window: create_window(w, h) };
+    let mut app = AppState {
+        pause: false,
+        single_step: false,
+        search: search,
+        saved_search: None,
+        window: create_window(w, h)
+    };
 
     let mut snapshot = BFSSearchSnapshot::new((w, h));
     snapshot.update(&app.search);
@@ -52,7 +55,13 @@ fn main() {
         while let Some(ref e) = app.window.poll_event() {
             app.process_input_event(e)
         }
-        if !app.pause   { app.search.step(); }
+        if !app.pause {
+            app.search.step();
+        } else if app.single_step {
+            app.search.step();
+            app.single_step = false;
+            app.pause = true;
+        }
         if let FrameUpdate::NewFrame{elapsed_frames: fs, elapsed_ns: ns} = fc.update() {
             info!(target: "tick", "new frame: ms={:?} skipped={:?}", ns / 1_000_000, fs - 1);
             snapshot.update(&app.search);
@@ -114,6 +123,7 @@ impl Drawable for BFSSearchSnapshot {
 
 struct AppState {
     pause: bool,
+    single_step: bool,
     search: BFSSearch<MapField>,
     window: RenderWindow,
     saved_search: Option<BFSSearch<MapField>>
@@ -133,6 +143,7 @@ impl AppState {
             &Event::KeyPressed{code, ..} => match code {
                 Key::Escape => self.window.close(),
                 Key::Space  => self.pause = !self.pause,
+                Key::Right  => self.single_step = true,
                 Key::S      => self.save(),
                 Key::R      => self.restore(),
                 _           => info!(target: "events", "unhandled key pressed: {:?}", code)
