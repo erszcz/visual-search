@@ -16,7 +16,8 @@ use sfml::graphics::{
     RenderTarget,
     RenderWindow,
     Vertex,
-    VertexArray
+    VertexArray,
+    View
 };
 use sfml::system::Vector2f;
 use sfml::window::{ Event, Key, VideoMode, ContextSettings };
@@ -57,6 +58,7 @@ fn main() {
                      ns / 1_000_000,
                      fs - 1);
             snapshot.update(&app.search);
+            app.window.clear(Color::BLACK);
             app.window.draw(&snapshot);
             app.window.display();
         }
@@ -122,31 +124,35 @@ struct AppState {
 impl AppState {
 
     fn process_input_event(&mut self, e: &Event) {
+        println!("event: {:?}", e);
         match e {
             &Event::Closed => self.window.close(),
+            &Event::TextEntered{unicode, ..} => match unicode {
+                '=' => self.zoom(0.8),
+                '-' => self.zoom(1.25),
+                ___ => println!("text entered: {:?}", unicode)
+            }
             &Event::KeyPressed{code, ..} => match code {
                 Key::Escape => self.window.close(),
-                //Key::Equal  => self.zoom(0.8),
-                //Key::Dash   => self.zoom(1.25),
                 Key::Space  => self.pause = !self.pause,
                 Key::S      => self.save(),
                 Key::R      => self.restore(),
-                _ => {}
+                _           => println!("pressed: {:?}", code)
             },
             _ => {}
         }
     }
 
-    //fn zoom(&mut self, factor: f32) {
-    //    let v = self.window.default_view().clone();
-    //    let &mut mv = &mut v;
-    //    let center = v.center() * factor;
-    //    mv.set_center(center);
-    //    mv.zoom(factor);
-    //    self.window.set_view(mv);
-    //    self.window.clear(Color::BLACK);
-    //    println!("zoom by {:?}", factor);
-    //}
+    fn zoom(&mut self, factor: f32) {
+        let default_view = self.window.view();
+        let mut zoomed_view = View::new(
+            default_view.center() * factor,
+            default_view.size()
+        );
+        zoomed_view.zoom(factor);
+        self.window.set_view(&zoomed_view);
+        println!("zoom by {:?}", factor);
+    }
 
     fn save(&mut self) {
         self.saved_search = Some (self.search.clone());
