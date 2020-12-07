@@ -1,6 +1,6 @@
 extern crate clock_ticks;
 extern crate env_logger;
-extern crate log;
+#[macro_use] extern crate log;
 extern crate png;
 extern crate search;
 extern crate sfml;
@@ -54,9 +54,7 @@ fn main() {
         }
         if !app.pause   { app.search.step(); }
         if let FrameUpdate::NewFrame{elapsed_frames: fs, elapsed_ns: ns} = fc.update() {
-            println!("new frame: ms={:?} skipped={:?}",
-                     ns / 1_000_000,
-                     fs - 1);
+            info!(target: "tick", "new frame: ms={:?} skipped={:?}", ns / 1_000_000, fs - 1);
             snapshot.update(&app.search);
             app.window.clear(Color::BLACK);
             app.window.draw(&snapshot);
@@ -124,20 +122,20 @@ struct AppState {
 impl AppState {
 
     fn process_input_event(&mut self, e: &Event) {
-        println!("event: {:?}", e);
+        info!(target: "events", "event: {:?}", e);
         match e {
             &Event::Closed => self.window.close(),
             &Event::TextEntered{unicode, ..} => match unicode {
                 '=' => self.zoom(0.8),
                 '-' => self.zoom(1.25),
-                ___ => println!("text entered: {:?}", unicode)
+                ___ => info!(target: "events", "unhandled text entered: {:?}", unicode)
             }
             &Event::KeyPressed{code, ..} => match code {
                 Key::Escape => self.window.close(),
                 Key::Space  => self.pause = !self.pause,
                 Key::S      => self.save(),
                 Key::R      => self.restore(),
-                _           => println!("pressed: {:?}", code)
+                _           => info!(target: "events", "unhandled key pressed: {:?}", code)
             },
             _ => {}
         }
@@ -151,21 +149,21 @@ impl AppState {
         );
         zoomed_view.zoom(factor);
         self.window.set_view(&zoomed_view);
-        println!("zoom by {:?}", factor);
+        info!(target: "events", "zoom by {:?}", factor);
     }
 
     fn save(&mut self) {
         self.saved_search = Some (self.search.clone());
-        println!("saved search state");
+        info!(target: "events", "saved search state");
     }
 
     fn restore(&mut self) {
         if let Some (ref saved) = self.saved_search {
             self.search = saved.clone();
             self.window.clear(Color::BLACK);
-            println!("restored search state");
+            info!(target: "events", "restored search state");
         } else {
-            println!("no saved search state!");
+            info!(target: "events", "no saved search state!");
         }
     }
 
