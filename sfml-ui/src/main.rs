@@ -6,7 +6,6 @@ extern crate search;
 extern crate sfml;
 
 mod frame_counter;
-mod image_buffer;
 
 use frame_counter::{ FrameCounter, FrameUpdate };
 use search::graph::{ BFSSearch, GraphSearch };
@@ -25,8 +24,6 @@ use sfml::graphics::{
 use sfml::system::Vector2f;
 use sfml::window::{ Event, Key, VideoMode, ContextSettings };
 
-const DEFAULT_SCALE_FACTOR: usize = 4;
-
 fn main() {
     env_logger::init();
     let args : Vec<String> = std::env::args().collect();
@@ -37,10 +34,9 @@ fn main() {
     let map = map::png::load(arg_map);
     let search_method = search::bfs as fn(search::map::Map) -> BFSSearch<MapField>;
 
-    let image = image_buffer::from_map(&map, DEFAULT_SCALE_FACTOR);
     let search = search_method(map.clone());
     let mut fc = FrameCounter::from_fps(20);
-    let (w, h) = image.dimensions();
+    let (w, h) = (map.width as u32, map.height as u32);
     let mut app = AppState {
         pause: false,
         single_step: false,
