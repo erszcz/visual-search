@@ -1,8 +1,5 @@
 use std::ops::{ Index, IndexMut };
 
-pub use self::image_buffer::map_to_image_buffer as to_image_buffer;
-
-pub mod image_buffer;
 pub mod png;
 
 pub type Position = (usize, usize);

@@ -1,10 +1,10 @@
 extern crate image;
 
-use super::{ Field, Map };
+use search::map::{ Field, Map };
 
 pub type Image = image::ImageBuffer<image::Rgba<u8>, Vec<u8>>;
 
-pub fn map_to_image_buffer(map: &Map, scale_factor: usize) -> Image {
+pub fn from_map(map: &Map, scale_factor: usize) -> Image {
     let w = (map.width * scale_factor) as u32;
     let h = (map.height * scale_factor) as u32;
     let f = |x, y| {

@@ -488,6 +488,7 @@ version = "0.1.0"
 dependencies = [
  "clock_ticks",
  "env_logger",
+ "image",
  "log",
  "png",
  "search",
