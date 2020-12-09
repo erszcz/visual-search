@@ -8,4 +8,5 @@ therefore facilitate learning them.
 
 ## ToDo
 
-- [ ] Port the visualisation parts to http://ggez.rs/
+- [ ] `image_buffer` is now dropped from the project,
+  but the `image` crate seems to be way easier to use; reevaluate that
