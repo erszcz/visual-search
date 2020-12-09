@@ -1,32 +1,10 @@
-[package]
-name = "search"
-version = "0.0.1"
-authors = ["Radek Szymczyszyn <lavrin@gmail.com>"]
-edition = "2018"
+[workspace]
 
-[dependencies]
-env_logger = "0.8.2"
-image = "0.23.12"
-log = "0.4.11"
-rustc-serialize = "0.3.24"
-sfml = "0.15.1"
-png = "0.16.7"
-
-[dependencies.clock_ticks]
-git = "https://github.com/tomaka/clock_ticks"
-
-[lib]
-name = "search"
-path = "src/search/lib.rs"
-
-#[[bin]]
-#doc  = false
-#name = "search"
-#path = "src/bin/search.rs"
-
-#[[bin]]
-#name = "vis"
-#path = "src/bin/vis.rs"
+members = [
+    "cli",
+    "search",
+    "sfml-ui"
+]
 
 [profile.release]
 opt-level = 3

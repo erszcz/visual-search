@@ -6,7 +6,6 @@ use std::collections::{ BinaryHeap, HashMap, HashSet };
 use std::fmt::Debug;
 use std::rc::Rc;
 
-pub mod frame_counter;
 pub mod graph;
 pub mod map;
 

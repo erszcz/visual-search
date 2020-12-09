@@ -1,0 +1,15 @@
+[package]
+name = "sfml-ui"
+version = "0.1.0"
+authors = ["Radek Szymczyszyn <radoslaw.szymczyszyn@erlang-solutions.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clock_ticks = { git = "https://github.com/tomaka/clock_ticks" }
+env_logger = "0.8.2"
+log = "0.4.11"
+png = "0.16.7"
+search = { path = "../search" }
+sfml = "0.15.1"

@@ -69,6 +69,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
+name = "cli"
+version = "0.1.0"
+dependencies = [
+ "env_logger",
+ "log",
+ "png",
+ "rustc-serialize",
+ "search",
+]
+
+[[package]]
 name = "clock_ticks"
 version = "0.1.1"
 source = "git+https://github.com/tomaka/clock_ticks#ecdd6e4b5eb1f7c9b20f07e19dc8b9f9bf3527f3"
@@ -81,9 +92,9 @@ checksum = "3d7b894f5411737b7867f4827955924d7c254fc9f4d91a6aad6b097804b1018b"
 
 [[package]]
 name = "const_fn"
-version = "0.4.3"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c478836e029dcef17fb47c89023448c64f781a046e0300e257ad8225ae59afab"
+checksum = "cd51eab21ab4fd6a3bf889e2d0958c0a6e3a61ad04260325e919e652a2a62826"
 
 [[package]]
 name = "crc32fast"
@@ -271,9 +282,9 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "libc"
-version = "0.2.80"
+version = "0.2.81"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4d58d1b70b004888f764dfbf6a26a3b0342a1632d33968e4a179d8011c760614"
+checksum = "1482821306169ec4d07f6aca392a4681f66c75c9918aa49641a2595db64053cb"
 
 [[package]]
 name = "log"
@@ -371,9 +382,9 @@ dependencies = [
 
 [[package]]
 name = "png"
-version = "0.16.7"
+version = "0.16.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dfe7f9f1c730833200b134370e1d5098964231af8450bce9b78ee3ab5278b970"
+checksum = "3c3287920cb847dee3de33d301c463fba14dda99db24214ddf93f83d3021f4c6"
 dependencies = [
  "bitflags",
  "crc32fast",
@@ -444,15 +455,11 @@ checksum = "d29ab0c6d3fc0ee92fe66e2d99f700eab17a8d57d1c1d3b748380fb20baa78cd"
 
 [[package]]
 name = "search"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
- "clock_ticks",
- "env_logger",
  "image",
  "log",
  "png",
- "rustc-serialize",
- "sfml",
 ]
 
 [[package]]
@@ -474,6 +481,18 @@ name = "sfml-build"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4f83a1ad7f7c79c9273019b2abfacbd4fa7150d23caca8cae586f0f1ea43b151"
+
+[[package]]
+name = "sfml-ui"
+version = "0.1.0"
+dependencies = [
+ "clock_ticks",
+ "env_logger",
+ "log",
+ "png",
+ "search",
+ "sfml",
+]
 
 [[package]]
 name = "termcolor"

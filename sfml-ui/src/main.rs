@@ -5,7 +5,9 @@ extern crate png;
 extern crate search;
 extern crate sfml;
 
-use search::frame_counter::{ FrameCounter, FrameUpdate };
+mod frame_counter;
+
+use frame_counter::{ FrameCounter, FrameUpdate };
 use search::graph::{ BFSSearch, GraphSearch };
 use search::{ map, MapField };
 use sfml::graphics::{
