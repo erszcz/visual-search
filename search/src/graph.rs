@@ -51,18 +51,18 @@ impl<Node: SearchNode> GraphSearch for BFSSearch<Node> {
             return
         }
         let current = self.frontier.remove(0);
-        debug!("visited: {:?}", self.visited);
-        debug!("current: {:?}", current.id());
-        debug!("steps  : {:?}", self.steps);
+        debug!(target: "bfs", "visited: {:?}", self.visited);
+        debug!(target: "bfs", "current: {:?}", current.id());
+        debug!(target: "bfs", "steps  : {:?}", self.steps);
         if current.is_goal() {
-            debug!("goal found: {:?}", current.id());
+            debug!(target: "bfs", "goal found: {:?}", current.id());
             let path = build_path::<Node>(&self.steps, current.id());
             self.result = SearchState::Finished(path);
             return
         }
         let neighbours = current.neighbours();
         let n_ids: Vec<Node::Id> = neighbours.iter().map(|n| n.id()).collect();
-        debug!("allowed: {:?}", n_ids);
+        debug!(target: "bfs", "allowed: {:?}", n_ids);
         for next in neighbours.iter() {
             if !self.visited.contains(&next.id()) {
                 self.frontier.push(next.clone());
