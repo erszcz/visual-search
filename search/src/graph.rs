@@ -2,6 +2,8 @@ use std::collections::{ HashMap, HashSet };
 use std::fmt::Debug;
 use std::hash::Hash;
 
+use super::{ MapField };
+
 pub trait SearchNode: Clone + Eq + Hash {
     type Id: Clone + Debug + Eq + Hash;
     fn id(&self) -> Self::Id;
@@ -38,6 +40,32 @@ pub struct BFSSearch<V: SearchNode> {
     pub frontier: Vec<V>,
     pub visited: HashSet<V::Id>,
     pub steps: HashMap<V::Id, V::Id>
+}
+
+enum NodeState {
+    //Regular,
+    //Start,
+    //Goal,
+    Visited,
+    Path,
+    Frontier
+}
+
+pub struct Node((usize, usize), NodeState);
+
+impl BFSSearch<MapField> {
+    pub fn nodes(&self) -> Box<dyn Iterator<Item=Node> + '_> {
+        let visited = self.visited.iter()
+            .map(|pos| Node(*pos, NodeState::Visited));
+        let frontier = self.frontier.iter()
+            .map(|map_field| Node(map_field.pos, NodeState::Frontier));
+        if let SearchState::Finished(ref path) = self.result {
+            let path = path.iter().map(|pos| Node(*pos, NodeState::Path));
+            Box::new( visited.chain(frontier).chain(path) )
+        } else {
+            Box::new( visited.chain(frontier) )
+        }
+    }
 }
 
 impl<Node: SearchNode> GraphSearch for BFSSearch<Node> {
