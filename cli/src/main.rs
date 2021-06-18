@@ -5,7 +5,7 @@ extern crate rustc_serialize;
 
 extern crate search;
 
-use search::graph::GraphSearch;
+use search::graph::{ SearchState, GraphSearch };
 use search::{ map, Search };
 
 #[derive(Debug)]
@@ -47,8 +47,11 @@ fn do_search(map: &search::map::Map, method: Method)
 fn do_bfs(map: search::map::Map)
         -> Result<search::Path, search::Error> {
     let mut state = search::bfs(map);
-    while let None = state.result {
+    while !state.result.is_over() {
         state.step();
     }
-    state.result.expect("do_bfs error")
+    match state.result {
+        SearchState::Finished(path) => Ok(path),
+        _ => Err(search::Error::GoalUnreachable)
+    }
 }

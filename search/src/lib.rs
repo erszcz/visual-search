@@ -1,6 +1,6 @@
 #[macro_use] extern crate log;
 
-use graph::{ BFSSearch, SearchNode };
+use graph::{ SearchState, BFSSearch, SearchNode };
 use map::{ Field, Map, Position };
 use std::collections::{ BinaryHeap, HashMap, HashSet };
 use std::fmt::Debug;
@@ -212,7 +212,7 @@ pub fn bfs<'a>(map: Map) -> BFSSearch<MapField> {
         .map(|pos| MapField { pos: *pos,
                               map: rc_map.clone() })
         .collect();
-    BFSSearch { result: None,
+    BFSSearch { result: SearchState::NotStarted,
                 frontier: start.clone(),
                 visited: start.iter().map(|field| field.pos).collect(),
                 steps: HashMap::new() }

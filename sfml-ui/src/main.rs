@@ -8,7 +8,7 @@ extern crate sfml;
 mod frame_counter;
 
 use frame_counter::{ FrameCounter, FrameUpdate };
-use search::graph::{ BFSSearch, GraphSearch };
+use search::graph::{ SearchState, BFSSearch, GraphSearch };
 use search::{ map, MapField };
 use sfml::graphics::{
     Color,
@@ -95,7 +95,7 @@ impl SearchSnapshot {
         for field in search.frontier.iter() {
             self.vertices.append(&pos_to_vertex(field.pos, Color::RED));
         }
-        if let Some (Ok (ref path)) = search.result {
+        if let SearchState::Finished(ref path) = search.result {
             for node in path.iter() {
                 self.vertices.append(&pos_to_vertex(*node, Color::BLUE));
             }
