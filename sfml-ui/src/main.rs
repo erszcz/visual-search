@@ -45,7 +45,7 @@ fn main() {
         window: create_window(w, h)
     };
 
-    let mut snapshot = BFSSearchSnapshot::new((w, h));
+    let mut snapshot = SearchSnapshot::new((w, h));
     snapshot.update(&app.search);
     app.window.clear(Color::BLACK);
     app.save();
@@ -71,17 +71,17 @@ fn main() {
     }
 }
 
-struct BFSSearchSnapshot {
+struct SearchSnapshot {
     vertices: VertexArray
 }
 
-impl BFSSearchSnapshot {
+impl SearchSnapshot {
 
-    fn new((width, height): (u32, u32)) -> BFSSearchSnapshot {
+    fn new((width, height): (u32, u32)) -> SearchSnapshot {
         let size = width * height;
         // allocate in one go
         let va = VertexArray::new(PrimitiveType::Points, size as usize);
-        BFSSearchSnapshot { vertices: va }
+        SearchSnapshot { vertices: va }
     }
 
     fn update(&mut self, search: &BFSSearch<MapField>) {
@@ -107,8 +107,7 @@ fn pos_to_vertex((x, y): (usize, usize), color: Color) -> Vertex {
     Vertex::with_pos_color(v2f, color)
 }
 
-impl Drawable for BFSSearchSnapshot {
-
+impl Drawable for SearchSnapshot {
 
     fn draw<'a: 'shader, 'texture, 'shader, 'shader_texture>(
         &'a self,
