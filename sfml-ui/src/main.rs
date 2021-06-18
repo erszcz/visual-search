@@ -75,6 +75,8 @@ struct SearchSnapshot {
     vertices: VertexArray
 }
 
+const GRAY: sfml::graphics::Color = Color{ r: 60, g: 60, b: 60, a: 255 };
+
 impl SearchSnapshot {
 
     fn new((width, height): (u32, u32)) -> SearchSnapshot {
@@ -88,7 +90,7 @@ impl SearchSnapshot {
         // TODO: try not to redraw the whole buffer each frame
         self.vertices.clear();
         for node in search.visited.iter() {
-            self.vertices.append(&pos_to_vertex(*node, Color::CYAN));
+            self.vertices.append(&pos_to_vertex(*node, GRAY));
         }
         for field in search.frontier.iter() {
             self.vertices.append(&pos_to_vertex(field.pos, Color::RED));
