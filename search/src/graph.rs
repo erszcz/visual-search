@@ -42,16 +42,16 @@ pub struct BFSSearch<V: SearchNode> {
     pub steps: HashMap<V::Id, V::Id>
 }
 
-enum NodeState {
+pub enum NodeState {
     //Regular,
     //Start,
     //Goal,
     Visited,
-    Path,
-    Frontier
+    Frontier,
+    Path
 }
 
-pub struct Node((usize, usize), NodeState);
+pub struct Node(pub (usize, usize), pub NodeState);
 
 impl BFSSearch<MapField> {
     pub fn nodes(&self) -> Box<dyn Iterator<Item=Node> + '_> {
