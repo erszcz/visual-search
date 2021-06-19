@@ -75,7 +75,7 @@ struct SearchSnapshot {
     vertices: VertexArray
 }
 
-const GRAY: sfml::graphics::Color = Color{ r: 60, g: 60, b: 60, a: 255 };
+const GRAY: sfml::graphics::Color = Color{ r: 90, g: 90, b: 90, a: 255 };
 
 impl SearchSnapshot {
 
@@ -97,7 +97,7 @@ impl SearchSnapshot {
         }
         if let SearchState::Finished(ref path) = search.result {
             for node in path.iter() {
-                self.vertices.append(&pos_to_vertex(*node, Color::BLUE));
+                self.vertices.append(&pos_to_vertex(*node, Color::WHITE));
             }
         }
     }
