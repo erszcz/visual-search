@@ -8,7 +8,7 @@ extern crate sfml;
 mod frame_counter;
 
 use frame_counter::{ FrameCounter, FrameUpdate };
-use search::graph::{ BFSSearch, GraphSearch, Node, NodeState };
+use search::graph::{ BFSSearch, GraphSearch, Node2d, NodeState };
 use search::{ map, MapField };
 use sfml::graphics::{
     Color,
@@ -86,10 +86,10 @@ impl SearchSnapshot {
         SearchSnapshot { vertices: va }
     }
 
-    fn update(&mut self, search: &BFSSearch<MapField>) {
+    fn update(&mut self, search: &impl GraphSearch<Node2d>) {
         // TODO: try not to redraw the whole buffer each frame
         self.vertices.clear();
-        for Node(pos, state) in search.nodes() {
+        for Node2d(pos, state) in search.nodes() {
             let color = match state {
                 NodeState::Visited => GRAY,
                 NodeState::Frontier => Color::RED,

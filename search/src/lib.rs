@@ -1,6 +1,7 @@
 #[macro_use] extern crate log;
 
 use graph::{ SearchState, BFSSearch, SearchNode };
+use crate::graph::Positionable;
 use map::{ Field, Map, Position };
 use std::collections::{ BinaryHeap, HashMap, HashSet };
 use std::fmt::Debug;
@@ -182,6 +183,19 @@ impl std::fmt::Debug for MapField {
         formatter.write_str(&format!("{:?}", self.pos)).unwrap();
         Ok (())
     }
+}
+
+impl Positionable for (usize, usize) {
+
+    fn pos2d(&self) -> (usize, usize) {
+        *self
+    }
+
+    fn pos3d(&self) -> (usize, usize, usize) {
+        let &(x, y) = self;
+        (x, y, 0)
+    }
+
 }
 
 impl SearchNode for MapField {
