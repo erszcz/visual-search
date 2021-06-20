@@ -1,12 +1,14 @@
 #[macro_use] extern crate log;
 
-use graph::{ SearchState, BFSSearch, SearchNode };
+use crate::bfs::BFSSearch;
 use crate::graph::Positionable;
+use crate::graph::{ SearchState, SearchNode };
 use map::{ Field, Map, Position };
 use std::collections::{ BinaryHeap, HashMap, HashSet };
 use std::fmt::Debug;
 use std::rc::Rc;
 
+pub mod bfs;
 pub mod graph;
 pub mod map;
 

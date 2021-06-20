@@ -8,7 +8,8 @@ extern crate sfml;
 mod frame_counter;
 
 use frame_counter::{ FrameCounter, FrameUpdate };
-use search::graph::{ BFSSearch, GraphSearch, Node2d, NodeState };
+use search::bfs::BFSSearch;
+use search::graph::{ GraphSearch, Node2d, NodeState };
 use search::{ map, MapField };
 use sfml::graphics::{
     Color,
